@@ -1,19 +1,32 @@
 #!/usr/bin/python
-import re
-import more_itertools
-import sys
-import pprint
-import pyparsing
-from pyparsing import *
-import numpy as np
-import csv
 '''
+prototxt_parser is parse , coverting the Caffe prototxt file inot a csv file
+flow :
+1. used a BNF to parse the prototxt to a hash file
 layer_dict => [n] =>
                    {type} = ['Input']
                    {name} = ['data']
                    {dim}  = [1,3,32,32]
-
+2. convet the hash to 2-D list
+3. write the 2-D list as a csv file
 '''
+
+import argparse
+import csv
+from pyparsing import *
+
+
+parser = argparse.ArgumentParser()
+# Required arguments: input and output files.
+parser.add_argument(
+    "proto_file",
+    help="Input the caffe protxt file."
+)
+parser.add_argument(
+    "csv_file",
+    help="Output the csv file."
+)
+args = parser.parse_args()
 def flatten(the_list,new_list):
     for i in the_list:
         if isinstance(i, list):
@@ -21,8 +34,10 @@ def flatten(the_list,new_list):
         else:
             new_list.append(i)
 
-with open('C:\\scripts\\python27\\coffe_test\\cifar10_quick.prototxt') as f:
+
+with open(args.proto_file) as f:
     s = f.read()
+
 LBRACE,RBRACE,LBRACK,RBRACK,COMMA,COLON = map(Suppress,"{}[],:")
 
 key    = Word(alphanums+"_")
@@ -46,11 +61,8 @@ for items in layer_results:
     for i in range(0,len(layer_list)):
         if layer_list[i] == "name":
             layer_name = layer_list[i+1]
-    #print layer_name
     if  layer_name not in layer_names:
         layer_names.append(layer_name)
-    #print layer_list
-    #layer_dict[layer_name] = dict(zip(layer_list[0::2],layer_list[1::2]))
     temp_dict = {}
     for i in range(0,len(layer_list),2):
         key = layer_list[i]
@@ -88,6 +100,6 @@ for i in range(0,len(layer_dict)):
 
     base_line += max_para
 
-with open("output.csv", "wb") as csvfile:
+with open(args.csv_file, "wb") as csvfile:
     writer = csv.writer(csvfile)
     writer.writerows(layer_array)
