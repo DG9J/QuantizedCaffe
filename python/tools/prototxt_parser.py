@@ -24,7 +24,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "csv_file",
-    help="Output the csv file."
+    help="Output the csv file."W
 )
 args = parser.parse_args()
 def flatten(the_list,new_list):
@@ -38,7 +38,7 @@ def flatten(the_list,new_list):
 with open(args.proto_file) as f:
     s = f.read()
 
-LBRACE,RBRACE,LBRACK,RBRACK,COMMA,COLON = map(Suppress,"{}[],:")
+LBRACE,RBRACE,LBRACK,RBRACK,COMMA,COLON,DOT = map(Suppress,"{}[],:.")
 
 key    = Word(alphanums+"_")
 value  = Word(alphanums+"_")

