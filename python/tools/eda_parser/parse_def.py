@@ -54,7 +54,7 @@ class parse_def():
         origY = pp.Word(pp.nums + "*" + "-")
         orig = pp.Group(pp.Optional(LPAR) + origX + origY + pp.Optional(RPAR))
         rectangle = pp.Group( orig + orig)
-        polygon = pp.Group(orig + orig + pp.OneOrMore(orig))
+        polygon = pp.Group(orig + pp.OneOrMore(orig))
         rowName = pp.Word(pp.alphanums + '_')
         siteName = rowName
         viaName = flatName
@@ -72,7 +72,8 @@ class parse_def():
         property = pp.Group(
             "PROPERTYDEFINITIONS" + ObjectType + flatName + PropType + flatName + "END PROPERTYDEFINITIONS ")
         die_area = pp.Group("DIEAREA" + polygon + SEMICOLON)
-        compMaskShift = pp.Group("COMPONENTMASKSHIFT" + pp.OneOrMore(layerName))
+        compMaskShift = pp.Group(pp.oneOf("COMPONENTMASKSHIFT ") + pp.OneOrMore(layerName))
+        maskShift = pp.Group("MASKSHIFT" + integer)
 
         #COMMON
         propDefine = pp.Group(PLUS + "PROPERTY" + pp.OneOrMore(LBRACE + propName + propVal + RBRACE) )
@@ -109,7 +110,7 @@ class parse_def():
         ndrLayer = pp.Group(PLUS + "LAYER" + layerName + "WIDTH" + integer +
                                             pp.Optional("DIAGWIDTH" + integer) +
                                             pp.Optional("SPACING" + integer) +
-                                            pp.Optional("WIREEXT" +  flatName))
+                                            pp.Optional("WIREEXT" +  flatName) )
 
 
         ndrDefine  = pp.Group(DASH + flatName +
@@ -118,16 +119,34 @@ class parse_def():
                             pp.Optional(PLUS + "VIA" + viaName) +
                             pp.Optional(PLUS + "VIARULE" + flatName) +
                             pp.ZeroOrMore(PLUS + "MINCUTS" + cutLayerName + integer) +
-                            propDefine +
+                            pp.ZeroOrMore(propDefine) +
                             SEMICOLON)
         ndrSect    = pp.Group("NONDEFAULTRULES" + integer + SEMICOLON + pp.OneOrMore(ndrDefine) + "END NONDEFAULTRULES" )
 
         # REGION SECTION
         regionDefine = pp.Group(DASH + flatName + polygon +
-                                pp.Optional(PLUS + "TYPE" + LBRACE +  pp.oneOf("FENCE GUIDE" ) + RBRACE) +
-                                pp.OneOrMore(PLUS + propDefine) +
+                                pp.Optional(PLUS + "TYPE" + pp.oneOf("FENCE GUIDE")) +
+                                pp.ZeroOrMore(propDefine) +
                                 SEMICOLON)
         regionSect  = pp.Group("REGIONS" + integer + SEMICOLON + pp.OneOrMore(regionDefine) + "END REGIONS")
+
+        # COMPONENTS
+        cellLoc  = pp.Group(PLUS + pp.oneOf("FIXED COVER PLACED UNPLACED") + pp.Optional(orig)  + pp.Optional(orient) )
+        compDefine = pp.Group(DASH + hierName + flatName +
+                              pp.Optional(PLUS + "EEQMASTER" + flatName) +
+                              pp.Optional(PLUS + "SOURCE" + pp.oneOf("NETLIST DIST USER TIMING")) +
+                              pp.Optional(cellLoc) +
+                              pp.Optional(PLUS + maskShift) +
+                              pp.Optional(PLUS + "HALO" + pp.Optional("SOFT") + rectangle) +
+                              pp.Optional(PLUS + "ROUTEHALO" + integer + layerName + layerName) +
+                              pp.Optional(PLUS + "WEIGHT" + integer) +
+                              pp.Optional(PLUS + "REGION" + flatName) +
+                              pp.Optional(propDefine) +
+                              SEMICOLON
+                              )
+        compSect = pp.Group("COMPONENTS" + integer  + SEMICOLON + pp.OneOrMore(compDefine) + "END COMPONENTS")
+
+        ##pin section
 
         rpt_file = self.def_file
         # print rpt_file
@@ -143,8 +162,14 @@ class parse_def():
             #rst = tracks.searchString(rpt_string)
             #rst = viaSect.searchString(rpt_string)
             #rst = viaSect.searchString(rpt_string)
-            rst = ndrSect.searchString(rpt_string)
+            #rst = ndrLayer.searchString(rpt_string)
+            #rst = ndrDefine.searchString(rpt_string)
+            #rst = ndrSect.searchString(rpt_string)
             #self.viaSect = viaSect.searchString(rpt_string)
+            #rst = regionDefine.searchString(rpt_string)
+            #rst  = regionSect.searchString(rpt_string)
+            #rst = compDefine.searchString(rpt_string)
+            rst = compSect.searchString(rpt_string)
             print len(rst) , rst
 
 
