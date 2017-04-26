@@ -19,6 +19,7 @@ class parse_def():
         PLUS, DASH = map(pp.Suppress, "+-")
         LPAR, RPAR = map(pp.Suppress, "()")
         SEMICOLON, DQUOTA = map(pp.Suppress, ';"')
+        SQOUTA,DQUTA = map(pp.Suppress, "\'\"")
 
         #character = pp.Word(pp.alphanums + BSLASH + UNDERSCORE + LBRACE + RBRACE)
         character = pp.Word(pp.alphanums + "/" + "_" + "[" +"]")
