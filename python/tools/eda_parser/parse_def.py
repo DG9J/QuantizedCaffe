@@ -4,9 +4,10 @@ import shutil
 import re
 import gzip
 import pyparsing as pp
+import icComVar
 
 
-class parse_def():
+class parse_def(icComVar):
     def __init__(self, def_file):
         self.def_file = def_file
         self.designName = "None"
@@ -14,103 +15,67 @@ class parse_def():
         print "parsing" , self.def_file
 
     def read_def(self):
-        COLON, LBRACK, RBRACK, LBRACE, RBRACE, TILDE, CARAT,COMMA = map(pp.Literal, ":[]{}~^,")
-        UNDERSCORE, DOT, BSLASH, SLASH = map(pp.Literal, '_./\\')
-        PLUS, DASH = map(pp.Suppress, "+-")
-        LPAR, RPAR = map(pp.Suppress, "()")
-        SEMICOLON, DQUOTA = map(pp.Suppress, ';"')
-        SQOUTA,DQUTA = map(pp.Suppress, "\'\"")
 
-        #character = pp.Word(pp.alphanums + BSLASH + UNDERSCORE + LBRACE + RBRACE)
-        character = pp.Word(pp.alphanums + "/" + "_" + "[" +"]")
         delimPair = pp.Word("[" + "]")
+        pinName =  self.hierName
+        instName = self.hierName
+        net_name = self.hierName
+        propName = self.flatName
+        propVal  = self.flatName
 
-        float = pp.Word(pp.nums + '.' + "_")
-        integer = pp.Word(pp.nums + '-')
-        flatName = pp.Word(pp.alphanums + "_")
-        hierName = pp.Word(pp.alphanums + '/' + '_' + '[' + ']')
-        pinName = hierName
-        instName = hierName
-        net_name = hierName
-        propName = flatName
-        propVal  = flatName
-
-        libCellName = pp.Word(pp.alphas.upper() + pp.nums + "_")
-
-        orient = pp.Word('N' + 'E' + 'W' + 'S' + 'FN' + 'FE' + 'FW' + 'FS')
-        routeDir = pp.Word('X' + 'Y')
-        layerName = pp.Word('M0' + 'M1' + 'M2' + 'M3' + 'M4' + 'M5' + 'M6' + 'M7' + 'M8' + 'M10' + 'M11' + 'M12' +
-                              'VIA0' + 'VIA1' + 'VIA2' + 'VIA3' + 'VIA4' + 'VIA5' + 'VIA6' + 'VIA7' + 'VIA8' + 'VIA10' + 'VIA11' + 'VIA12'
-                              )
-        metalLayerName = pp.Word('M0' + 'M1' + 'M2' + 'M3' + 'M4' + 'M5' + 'M6' + 'M7' + 'M8' + 'M10' + 'M11' + 'M12')
-        cutLayerName = pp.Word('VIA0' + 'VIA1' + 'VIA2' + 'VIA3' + 'VIA4' + 'VIA5' + 'VIA6' + 'VIA7' + 'VIA8' + 'VIA10' + 'VIA11' + 'VIA12')
-
-        placeStatus = pp.Word('PLACED' + "FIXED" + "COVER")
-        pinDir = pp.Word('INPUT' + "OUTPUT" + "INOUT")
-        pinUse = pp.Word('SIGNAL' + "POWER" + "GROUND" + "CLOCK")
-        PropType = pp.Word('INTERGER' + 'REAL' + 'STRING')
-        ObjectType = pp.Word("DESIGN" + "COMPONENT" + "NET" + "SPECIALNET" + "GROUP" + "ROW" + "COMPONENTPIN" + "REGION")
-
-        origX = pp.Word(pp.nums + "*" + "-")
-        origY = pp.Word(pp.nums + "*" + "-")
-        orig = pp.Group(pp.Optional(LPAR) + origX + origY + pp.Optional(RPAR))
-        rectangle = pp.Group( orig + orig)
-        polygon = pp.Group(orig + pp.OneOrMore(orig))
-        rowName = pp.Word(pp.alphanums + '_')
-        siteName = rowName
-        viaName = flatName
-        ndrName = flatName
-        
+        rowName  = self.flatName
+        siteName = self.flatName
+        viaName  = self.flatName
+        ndrName  = self.flatName
 
         # header
-        version = pp.Group("VERSION" + float + SEMICOLON)
-        dividerchar = pp.Group("DIVIDERCHAR" + DQUOTA + flatName + DQUOTA + SEMICOLON)
-        busbitchars = pp.Group("BUSBITCHARS" + DQUOTA + delimPair + SEMICOLON)
-        designName = pp.Group("DESIGN" + flatName + SEMICOLON)
-        technology = pp.Group("TECHNOLOGY" + flatName + SEMICOLON)
-        unit = pp.Group("UNITS DISTANCE MICRONS" + integer + SEMICOLON)
-        history = pp.Group("HISTORY" + character + SEMICOLON)
-        property = pp.Group(
-            "PROPERTYDEFINITIONS" + ObjectType + flatName + PropType + flatName + "END PROPERTYDEFINITIONS ")
-        die_area = pp.Group("DIEAREA" + polygon + SEMICOLON)
+        version     = pp.Group("VERSION" + self.float + self.SEMICOLON)
+        dividerchar = pp.Group("DIVIDERCHAR" + DQUOTA + flatName + DQUOTA + self.SEMICOLON)
+        busbitchars = pp.Group("BUSBITCHARS" + DQUOTA + delimPair + self.SEMICOLON)
+        designName =  pp.Group("DESIGN" + flatName + self.SEMICOLON)
+        technology =  pp.Group("TECHNOLOGY" + flatName + self.SEMICOLON)
+        unit =        pp.Group("UNITS DISTANCE MICRONS" + int + self.SEMICOLON)
+        history =     pp.Group("HISTORY" + flatName + self.SEMICOLON)
+        property =    pp.Group("PROPERTYDEFINITIONS" + objectType + flatName + propType + flatName + "END PROPERTYDEFINITIONS ")
+        die_area = pp.Group("DIEAREA" + polygon + self.SEMICOLON)
         compMaskShift = pp.Group(pp.oneOf("COMPONENTMASKSHIFT ") + pp.OneOrMore(layerName))
-        maskShift = pp.Group("MASKSHIFT" + integer)
+        maskShift = pp.Group("MASKSHIFT" + int)
 
         #COMMON
-        propDefine = pp.Group(PLUS + "PROPERTY" + pp.OneOrMore(LBRACE + propName + propVal + RBRACE) )
+        propDefine = pp.Group(self.PLUS + "PROPERTY" + pp.OneOrMore(LBRACE + propName + propVal + RBRACE) )
         # ROW
         
         row = pp.Group("ROW" + rowName + siteName + orig + orient +
-                       pp.Optional("DO" + integer + "BY" + integer + pp.Optional("STEP" + integer + integer)) +
-                       pp.Optional(PLUS + "PROPERTY" + pp.OneOrMore(LBRACE + flatName + flatName + RBRACE)) + SEMICOLON)
+                       pp.Optional("DO" + int + "BY" + int + pp.Optional("STEP" + int + int)) +
+                       pp.Optional(PLUS + "PROPERTY" + pp.OneOrMore(LBRACE + flatName + flatName + RBRACE)) + self.SEMICOLON)
         rows = pp.Group(pp.OneOrMore(row))
 
         # TRACK SECTION
-        track = pp.Group("TRACKS" + routeDir + integer + "DO" + integer + "STEP" + integer +
-                          pp.Optional("MASK" + integer + pp.Optional("SAMEMASK")) +
-                          pp.Optional("LAYER"+ layerName) + SEMICOLON)
+        track = pp.Group("TRACKS" + routeDir + int + "DO" + int + "STEP" + int +
+                          pp.Optional("MASK" + int + pp.Optional("SAMEMASK")) +
+                          pp.Optional("LAYER"+ layerName) + self.SEMICOLON)
         tracks = pp.Group(pp.OneOrMore(track))
 
         # VIA SECTION
         viaRule = pp.Group(PLUS + "VIARULE" + flatName +
-                                    PLUS + "CUTSIZE" + integer + integer +
-                                    PLUS + "LAYERS" + metalLayerName + cutLayerName + metalLayerName +
-                                    PLUS + "CUTSPACING" + integer + integer +
-                                    PLUS + "ENCLOSE" + integer + integer + integer + integer +
-                                    pp.Optional(PLUS + "ROWCOL" + integer + integer) +
-                                    pp.Optional(PLUS + "ORIGIN" + integer + integer) +
-                                    pp.Optional(PLUS + "OFFSET" + integer + integer + integer + integer) +
+                                    PLUS + "CUTSIZE" + int + int +
+                                    PLUS + "LAYERS" + matalName + cutName + matalName +
+                                    PLUS + "CUTSPACING" + int + int +
+                                    PLUS + "ENCLOSE" + int + int + int + int +
+                                    pp.Optional(PLUS + "ROWCOL" + int + int) +
+                                    pp.Optional(PLUS + "ORIGIN" + int + int) +
+                                    pp.Optional(PLUS + "OFFSET" + int + int + int + int) +
                                     pp.Optional(PLUS + "PATTERN" + flatName)
                         )
-        viaRect   = pp.Group(PLUS + "RECT"    + layerName + pp.Optional(PLUS + "MASK" + integer ) + rectangle)
-        viaPoly   = pp.Group(PLUS + "POLYGON" + layerName + pp.Optional(PLUS + "MASK" + integer) +  polygon)
-        viaDefine = pp.Group(DASH + viaName + pp.Optional(viaRule) + pp.ZeroOrMore(viaRect) + pp.ZeroOrMore(viaPoly) + SEMICOLON )
-        viaSect   = pp.Group("VIAS" + integer + SEMICOLON + pp.OneOrMore(viaDefine) + "END VIAS")
+        viaRect   = pp.Group(PLUS + "RECT"    + layerName + pp.Optional(PLUS + "MASK" + int ) + rectangle)
+        viaPoly   = pp.Group(PLUS + "POLYGON" + layerName + pp.Optional(PLUS + "MASK" + int) +  polygon)
+        viaDefine = pp.Group(DASH + viaName + pp.Optional(viaRule) + pp.ZeroOrMore(viaRect) + pp.ZeroOrMore(viaPoly) + self.SEMICOLON )
+        viaSect   = pp.Group("VIAS" + int + self.SEMICOLON + pp.OneOrMore(viaDefine) + "END VIAS")
 
         #NonDefault rule
-        ndrLayer = pp.Group(PLUS + "LAYER" + layerName + "WIDTH" + integer +
-                                            pp.Optional("DIAGWIDTH" + integer) +
-                                            pp.Optional("SPACING" + integer) +
+        ndrLayer = pp.Group(PLUS + "LAYER" + layerName + "WIDTH" + int +
+                                            pp.Optional("DIAGWIDTH" + int) +
+                                            pp.Optional("SPACING" + int) +
                                             pp.Optional("WIREEXT" +  flatName) )
 
 
@@ -119,17 +84,17 @@ class parse_def():
                             pp.OneOrMore(ndrLayer) +
                             pp.Optional(PLUS + "VIA" + viaName) +
                             pp.Optional(PLUS + "VIARULE" + flatName) +
-                            pp.ZeroOrMore(PLUS + "MINCUTS" + cutLayerName + integer) +
+                            pp.ZeroOrMore(PLUS + "MINCUTS" + cutName + int) +
                             pp.ZeroOrMore(propDefine) +
-                            SEMICOLON)
-        ndrSect    = pp.Group("NONDEFAULTRULES" + integer + SEMICOLON + pp.OneOrMore(ndrDefine) + "END NONDEFAULTRULES" )
+                            self.SEMICOLON)
+        ndrSect    = pp.Group("NONDEFAULTRULES" + int + self.SEMICOLON + pp.OneOrMore(ndrDefine) + "END NONDEFAULTRULES" )
 
         # REGION SECTION
         regionDefine = pp.Group(DASH + flatName + polygon +
                                 pp.Optional(PLUS + "TYPE" + pp.oneOf("FENCE GUIDE")) +
                                 pp.ZeroOrMore(propDefine) +
-                                SEMICOLON)
-        regionSect  = pp.Group("REGIONS" + integer + SEMICOLON + pp.OneOrMore(regionDefine) + "END REGIONS")
+                                self.SEMICOLON)
+        regionSect  = pp.Group("REGIONS" + int + self.SEMICOLON + pp.OneOrMore(regionDefine) + "END REGIONS")
 
         # COMPONENTS
         cellLoc  = pp.Group(PLUS + pp.oneOf("FIXED COVER PLACED UNPLACED") + pp.Optional(orig)  + pp.Optional(orient) )
@@ -139,13 +104,13 @@ class parse_def():
                               pp.Optional(cellLoc) +
                               pp.Optional(PLUS + maskShift) +
                               pp.Optional(PLUS + "HALO" + pp.Optional("SOFT") + rectangle) +
-                              pp.Optional(PLUS + "ROUTEHALO" + integer + layerName + layerName) +
-                              pp.Optional(PLUS + "WEIGHT" + integer) +
+                              pp.Optional(PLUS + "ROUTEHALO" + int + layerName + layerName) +
+                              pp.Optional(PLUS + "WEIGHT" + int) +
                               pp.Optional(PLUS + "REGION" + flatName) +
                               pp.Optional(propDefine) +
-                              SEMICOLON
+                              self.SEMICOLON
                               )
-        compSect = pp.Group("COMPONENTS" + integer  + SEMICOLON + pp.OneOrMore(compDefine) + "END COMPONENTS")
+        compSect = pp.Group("COMPONENTS" + int  + self.SEMICOLON + pp.OneOrMore(compDefine) + "END COMPONENTS")
 
         ##pin section
 
@@ -181,21 +146,21 @@ class parse_def():
 
 
 
-        cell_place = pp.Group(DASH + instName + libCellName + PLUS + placeStatus + orig + orient + SEMICOLON)
-        componets_section = pp.Group("COMPONENTS" + integer + SEMICOLON + pp.OneOrMore(cell_place) + "END COMPONENTS")
+        cell_place = pp.Group(DASH + instName + libCellName + PLUS + placeStatus + orig + orient + self.SEMICOLON)
+        componets_section = pp.Group("COMPONENTS" + int + self.SEMICOLON + pp.OneOrMore(cell_place) + "END COMPONENTS")
 
         pin_shape = pp.Group("PORT" + PLUS + "LAYER" + layerName + polygon + PLUS + placeStatus +  orig  + orient )
         pin_shapes = pp.Group(pp.ZeroOrMore(pin_shape))
-        pin_define = pp.Group(DASH + pinName + PLUS + "NET" + net_name + "DIRECTION" + pinDir + "USE" + pinUse + pin_shapes + SEMICOLON)
-        pin_section = pp.Group("PIN" + integer + SEMICOLON + pp.OneOrMore(pin_define) + "END PINS")
+        pin_define = pp.Group(DASH + pinName + PLUS + "NET" + net_name + "DIRECTION" + pinDir + "USE" + pinUse + pin_shapes + self.SEMICOLON)
+        pin_section = pp.Group("PIN" + int + self.SEMICOLON + pp.OneOrMore(pin_define) + "END PINS")
 
 
-        place_bkg = pp.Group(DASH + "PLACEMENT" + "RECT" + polygon + SEMICOLON)
+        place_bkg = pp.Group(DASH + "PLACEMENT" + "RECT" + polygon + self.SEMICOLON)
         place_bkgs = pp.OneOrMore(place_bkg)
 
-        bkg_spacing = pp.Group("SPACING" + integer)
-        route_bkg = pp.Group(DASH + "LAYER" + layerName + PLUS + pp.ZeroOrMore(bkg_spacing) + "POLYGON" +polygon + SEMICOLON
+        bkg_spacing = pp.Group("SPACING" + int)
+        route_bkg = pp.Group(DASH + "LAYER" + layerName + PLUS + pp.ZeroOrMore(bkg_spacing) + "POLYGON" +polygon + self.SEMICOLON
         route_bkgs = pp.OneOrMore(route_bkg)
-        bkg_section = pp.Group("BLOCKAGES" + integer + place_bkgs + route_bkgs + SEMICOLON)
+        bkg_section = pp.Group("BLOCKAGES" + int + place_bkgs + route_bkgs + self.SEMICOLON)
 '''
 
