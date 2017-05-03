@@ -5,6 +5,7 @@ import shutil
 import re
 import gzip
 import pyparsing as pp
+import icComVar
 
 class ptRpt():
     def __init__ (self,pt_rpt_file):
@@ -35,18 +36,18 @@ class ptRpt():
         print "init parse_pt_rpt"
 
     def read_ft_uncons(self):
-        trans       = floatNum
-        delay       = floatNum
-        arrive      = floatNum
-        cap         = floatNum
-        factor      = floatNum
-        sigma       = floatNum
-        uncertainty = floatNum
-        slack       = floatNum
+        trans       = icComVar.floatNumNum
+        delay       = icComVar.floatNumNum
+        arrive      = icComVar.floatNumNum
+        cap         = icComVar.floatNumNum
+        factor      = icComVar.floatNumNum
+        sigma       = icComVar.floatNumNum
+        uncertainty = icComVar.floatNumNum
+        slack       = icComVar.floatNumNum
 
-        transZero  = floatZero
-        delayZero  = floatZero
-        fanout      = intNum
+        transZero  = icComVar.floatNumZero
+        delayZero  = icComVar.floatNumZero
+        fanout      = icComVar.intNum
 
         instName   = self.hierName
         netName    = self.hierName
@@ -56,12 +57,12 @@ class ptRpt():
         toggleType       =  pp.Word("r" + "f" + "rise" + "fall")
         clockName        =  self.hierName
         
-        sp_pat          = pp.Group("Startpoint" + COLON + instName + LPAR + pp.OneOrMore(clockName)+RPAR )
-        ep_pat          = pp.Group("Endpoint" + COLON + instName + LPAR + pp.OneOrMore(clockName) +RPAR )
-        path_group_pat  = pp.Group("Path Group" + COLON + LPAR + clock_name  + RPAR)
-        path_type_pat   = pp.Group("Path Type" + COLON + path_type)
-        derate_pat      = pp.Group(path_type + "Timing Check Derating Factor" + COLON + factor )
-        sigma_pat       = pp.Group("Sigma" + COLON +  sigma )
+        sp_pat          = pp.Group("Startpoint" + icComVar.COLON + instName + LPAR + pp.OneOrMore(clockName)+RPAR )
+        ep_pat          = pp.Group("Endpoint" + icComVar.COLON + instName + LPAR + pp.OneOrMore(clockName) +RPAR )
+        path_group_pat  = pp.Group("Path Group" + icComVar.COLON + LPAR + clock_name  + RPAR)
+        path_type_pat   = pp.Group("Path Type" + icComVar.COLON + path_type)
+        derate_pat      = pp.Group(path_type + "Timing Check Derating Factor" + icComVar.COLON + factor )
+        sigma_pat       = pp.Group("Sigma" + icComVar.COLON +  sigma )
         column_pat      = pp.Group("Point"   + pp.OneOrMore(path_column))
         clk_pat         = pp.Group("clock"+ clkName + LPAR + toggleType + "edge" + RPAR + trans + delay + arrive)
         lch_clk_pin_pat = pp.Group(pinName + LPAR + lib_cell_name + RPAR + delay + annoType + arrive + toggleType)
@@ -95,11 +96,11 @@ class ptRpt():
             derate_pat +
             sigma_pat +
             column_pat +
-            self.dashLine +
+            icComVar.dashLine +
             input_delay +
             data_path_pat+
             data_arr_pat +
-            self.dashLine +
+            icComVar.dashLine +
             unconst_path
         )
         rpt_file = self.pt_rpt_file
@@ -145,7 +146,7 @@ class ptRpt():
             self.rpt_list = pt_path_pat.searchString(rpt_string)
             #print      self.rpt_list
             #return
-            #rs = self.dashLine.searchString(rpt_string)
+            #rs = icComVar.dashLine.searchString(rpt_string)
             #for i in range(0,len(rs[0][0])):
             #   print rs[0][0][i]
             #print len(rs[0])
@@ -187,17 +188,17 @@ class ptRpt():
 
 
     def readPtRpt(self):
-        trans       = self.float
-        delay       = self.float
-        arrive      = self.float
-        cap         = self.float
-        factor      = self.float
-        sigma       = self.float
-        uncertainty = self.float
-        slack       = self.float
+        trans       = self.icComVar.floatNum
+        delay       = self.icComVar.floatNum
+        arrive      = self.icComVar.floatNum
+        cap         = self.icComVar.floatNum
+        factor      = self.icComVar.floatNum
+        sigma       = self.icComVar.floatNum
+        uncertainty = self.icComVar.floatNum
+        slack       = self.icComVar.floatNum
 
-        transZero   = self.floatZero
-        delayZero   = self.floatZero
+        transZero   = self.icComVar.floatNumZero
+        delayZero   = self.icComVar.floatNumZero
         fanout      = self.int
         instName    = self.hierName
         netName     = self.hierName
@@ -212,35 +213,33 @@ class ptRpt():
         annoType    =  pp.Word("&" + "*")
 
 
-        sp_pat          = pp.Group("Startpoint" + COLON + instName + LPAR + pp.OneOrMore(clockName)+RPAR )
-        ep_pat          = pp.Group("Endpoint" + COLON + instName + LPAR + pp.OneOrMore(clockName) +RPAR )
-        path_group_pat  = pp.Group("Path Group" + COLON + clock_name )
-        path_type_pat   = pp.Group("Path Type" + COLON + path_type)
-        derate_pat      = pp.Group(path_type + "Timing Check Derating Factor" + COLON + factor )
-        sigma_pat       = pp.Group("Sigma" + COLON +  sigma )
+        sp_pat          = pp.Group("Startpoint" + icComVar.COLON + instName + pp.delimitedList(paraQuoteSting) )
+        ep_pat          = pp.Group("Endpoint" + icComVar.COLON + instName + pp.delimitedList(paraQuoteSting) )
+        path_group_pat  = pp.Group("Path Group" + icComVar.COLON + clock_name )
+        path_type_pat   = pp.Group("Path Type" + icComVar.COLON + path_type)
+        derate_pat      = pp.Group(path_type + "Timing Check Derating Factor" + icComVar.COLON + factor )
+        sigma_pat       = pp.Group("Sigma" + icComVar.COLON +  sigma )
         column_pat      = pp.Group("Point"   + pp.OneOrMore(path_column))
-        clk_pat         = pp.Group("clock"+ clkName + LPAR + toggleType + "edge" + RPAR + trans + delay + arrive)
+        clk_pat         = pp.Group("clock"+ clkName + pp.delimitedList(paraQuoteSting) + trans + delay + arrive)
         lch_clk_pin_pat = pp.Group(pinName + LPAR + lib_cell_name + RPAR + delay + annoType + arrive)
 
-        flat_pin_pat    = pp.Group(pinName+ LPAR + lib_cell_name + RPAR + trans + delay + pp.ZeroOrMore(annoType) + arrive + toggleType)
-        flat_net_pat    = pp.Group(netName + LPAR + "net" + RPAR + fanout + cap)
+        flat_pin_pat    = pp.Group(pinName+ pp.delimitedList(paraQuoteSting) + trans + delay + pp.ZeroOrMore(annoType) + arrive + toggleType)
+        flat_net_pat    = pp.Group(netName + pp.delimitedList(paraQuoteSting) + fanout + cap)
 
-        hier_pin_pat    = pp.Group(pinName + LPAR + moduleName + RPAR + transZero +  delayZero + pp.ZeroOrMore(annoType)+ arrive + toggleType)
-        hier_net_pat    = pp.Group(netName + LPAR + "net" + RPAR)
+        hier_pin_pat    = pp.Group(pinName + pp.delimitedList(paraQuoteSting) + transZero +  delayZero + pp.ZeroOrMore(annoType)+ arrive + toggleType)
+        hier_net_pat    = pp.Group(netName + pp.delimitedList(paraQuoteSting))
 
         clk_uncer_pat   = pp.Group("clock uncertainty" + uncertainty + arrive)
-        clk_nw_pat      = pp.Group("clock network delay" + LPAR + clkType + RPAR +  delay + arrive )
+        clk_nw_pat      = pp.Group("clock network delay" + pp.delimitedList(paraQuoteSting) +  delay + arrive )
         crpr_pat        = pp.Group("clock reconvergence pessimism" + delay + arrive)
-        cap_clk_pin_pat = pp.Group(pinName + LPAR + lib_cell_name + RPAR  + arrive + toggleType)
+        cap_clk_pin_pat = pp.Group(pinName + pp.delimitedList(paraQuoteSting)  + arrive + toggleType)
         lib_setup_pat   = pp.Group("library setup time" + delay + arrive)
         data_req_pat    = pp.Group("data required time" + arrive)
         data_arr_pat    = pp.Group("data arrival time" + arrive)
         stat_adj_pat    = pp.Group("statistical adjustment" + delay + arrive)
-        slack_pat       = pp.Group("slack" + LPAR +"VIOLATED" + RPAR + slack  )
-
-        #data_path_pat = pp.Group(pp.OneOrMore(flat_pin_pat)+pp.ZeroOrMore(flat_net_pat)+ pp.ZeroOrMore(hier_net_pat)+pp.ZeroOrMore(hier_pin_pat))
+        slack_pat       = pp.Group("slack" + pp.delimitedList(paraQuoteSting) + slack  )
+        
         data_path_pat = pp.Group(pp.OneOrMore(flat_pin_pat | flat_net_pat | hier_net_pat |hier_pin_pat))
-
         pt_path_pat = pp.Group(
             sp_pat +
             ep_pat +
@@ -249,7 +248,7 @@ class ptRpt():
             derate_pat +
             sigma_pat +
             column_pat +
-            self.dashLine +
+            icComVar.dashLine +
             clk_pat +
             clk_nw_pat +
             data_path_pat +
@@ -261,10 +260,10 @@ class ptRpt():
             cap_clk_pin_pat +
             lib_setup_pat +
             data_req_pat +
-            self.dashLine +
+            icComVar.dashLine +
             data_req_pat +
             data_arr_pat +
-            self.dashLine +
+            icComVar.dashLine +
             stat_adj_pat +
             slack_pat
         )
@@ -301,7 +300,7 @@ class ptRpt():
                 #rs = data_path_pat.searchString(rpt_string)
                 #pt_rpt_db = pt_path_pat.searchString(rpt_string)
                 self.rpt_list = pt_path_pat.searchString(rpt_string)
-                #rs = self.dashLine.searchString(rpt_string)
+                #rs = icComVar.dashLine.searchString(rpt_string)
                 #for i in range(0,len(rs[0][0])):
                 #   print rs[0][0][i]
                 #print len(rs[0])
@@ -329,127 +328,74 @@ class ptRpt():
                     self.data_req_time.append(self.rpt_list[i][0][18][1])
                     self.stat_adj.append(self.rpt_list[i][0][23][1])
                     self.slack.append(self.rpt_list[i][0][2])
-
-
-
-
                     #print self.rpt_list[i][0][24]
-
                 return self.rpt_list
 
 
-class iccQor:
+class iccQor():
     def __init__(self, qor_file):
         self.qor_file = qor_file
         self.qorAll = []
         print "parsing" , self.qor_file
 
-    def read_icc_qor(self):
-        LBRACK, RBRACK, LBRACE, RBRACE, TILDE, CARAT,COMMA = map(pp.Literal, "[]{}~^,")
-        UNDERSCORE,  BSLASH, SLASH = map(pp.Literal, '_/\\')
-        PLUS, DASH ,COLON,DOT = map(pp.Suppress, "+-:.")
-        LPAR, RPAR = map(pp.Suppress, "()")
-        SEMICOLON, DQUOTA = map(pp.Suppress, ';"')
-        SQUOTA,DQUOTA = map(pp.Suppress, "\'\"")
-        STAR = map(pp.Literal,'*')
-
-
-        float = pp.Word(pp.nums + '.' + "_" + '-')
-        integer = pp.Word(pp.nums + '-')
-        flatName = pp.Word(pp.alphanums + "_"+"-" + '.')
-        hierName = pp.Word(pp.alphanums + '/' + '_' + '[' + ']')
-        pathGroupName = pp.Word(pp.alphanums+'\*' + '_' + "'")
-        scenarioName = pp.Word(pp.alphanums + "_" + "'")
-        date = pp.Word(pp.alphanums + " " + ":")
-
-        sQuoteString = pp.QuotedString("'")
-        dQuoteString = pp.QuotedString('"')
-        starQuoteString = pp.QuotedString('*')
-        eqQuoteString = pp.QuotedString('=')
-        paraQuoteSting = pp.QuotedString('(', endQuoteChar=')')
-        tildeQuoteString = pp.QuotedString('~')
-        angleQuoteString = pp.QuotedString('<', endQuoteChar='>')
-
-
-
-        designName = pp.Group("Design" + COLON + flatName)
-
-        #qorHeader = pp.Group("Report" + COLON + flatName +
-        #                    "Design" + COLON + flatName +
-        #                    "Version" + COLON + flatName +
-        #                    "Date" + COLON + date +
-        #                    starLine +
-        #                    "Information: Timer using" + pp.delimitedList(sQuoteString) + DOT  + pp.delimitedList(paraQuoteSting)
-        #                     )
-        qorHeader = pp.Group("Report" + COLON + flatName +
-                            "Design" + COLON + flatName +
-                            "Version" + COLON + flatName +
-                            "Date" + COLON + date +
-                            starLine +
-                            "Information: Timer using" + pp.delimitedList(sQuoteString) + DOT  + pp.delimitedList(paraQuoteSting)
+    def read_icc_qor(self):        
+        qorHeader  = pp.Group("Report"   + icComVar.COLON  + icComVar.flatName +
+                              "Design"   + icComVar.COLON  + icComVar.flatName +
+                              "Version"  + icComVar.COLON  + icComVar.flatName +
+                              "Date"     +  icComVar.COLON + icComVar.date +
+                              icComVar.starLine +
+                              "Information: Timer using" + pp.delimitedList(icComVar.sQuoteString) + DOT  + pp.delimitedList(paraQuoteSting)
                              )
-
-        designName = pp.Group("Design" + COLON + flatName)
-        iccVersion = pp.Group("Version" + COLON + flatName)
-        writeDate  = pp.Group("Date" + COLON + date)
-        timer  = pp.Group("Information" + COLON + "Timer using" + pp.delimitedList(sQuoteString) + DOT  + pp.delimitedList(paraQuoteSting) )
-        #timer  = pp.Group(pp.delimitedList(paraQuoteSting))
-        #timer = pp.Group(pp.delimitedList(sQuoteString))
-        #timerType = pp.Group("Design" + COLON + flatName)
-
-
-
-        sceTimGroup = pp.Group("Scenario" +pp.delimitedList(sQuoteString) +
-                               "Timing Path Group" + pp.delimitedList(sQuoteString) +
-                               self.dashLine +
-                               "Levels of Logic" + COLON + integer +
-                                "Critical Path Length" + COLON + float +
-                                "Critical Path Slack" + COLON + float +
-                                "Critical Path Clk Period" + COLON + float +
-                                "Total Negative Slack" + COLON + float +
-                                "No. of Violating Paths" + COLON + integer +
-                                self.dashLine
+        sceTimGroup = pp.Group("Scenario" + pp.delimitedList(icComVar.sQuoteString) +
+                               "Timing Path Group" + pp.delimitedList(icComVar.sQuoteString) +
+                               icComVar.dashLine +
+                               "Levels of Logic" + icComVar.COLON + icComVar.intNum +
+                                "Critical Path Length" + icComVar.COLON + icComVar.floatNum +
+                                "Critical Path Slack" + icComVar.COLON + icComVar.floatNum +
+                                "Critical Path Clk Period" + icComVar.COLON + icComVar.floatNum +
+                                "Total Negative Slack" + icComVar.COLON + icComVar.floatNum +
+                                "No. of Violating Paths" + icComVar.COLON + icComVar.intNum +
+                                icComVar.dashLine
                                )
 
         cellCount = pp.Group(
-            "Cell Count" + self.dashLine +
-            "Hierarchical Cell Count:" +integer +
-            "Hierarchical Port Count:" + integer +
-            "Leaf Cell Count:" + integer +
-            "Buf/Inv Cell Count:" + integer +
-            "Buf Cell Count:" + integer +
-            "Inv Cell Count:" + integer +
-            "CT Buf/Inv Cell Count:" + integer +
-            "Combinational Cell Count:" + integer +
-            "Sequential Cell Count:" + integer +
-            "Macro Count:" + integer +
-            self.dashLine
+            "Cell Count" + icComVar.dashLine +
+            "Hierarchical Cell Count:" +icComVar.intNum +
+            "Hierarchical Port Count:" + icComVar.intNum +
+            "Leaf Cell Count:" + icComVar.intNum +
+            "Buf/Inv Cell Count:" + icComVar.intNum +
+            "Buf Cell Count:" + icComVar.intNum +
+            "Inv Cell Count:" + icComVar.intNum +
+            "CT Buf/Inv Cell Count:" + icComVar.intNum +
+            "Combinational Cell Count:" + icComVar.intNum +
+            "Sequential Cell Count:" + icComVar.intNum +
+            "Macro Count:" + icComVar.intNum +
+            icComVar.dashLine
         )
 
-        cellArea = pp.Group("Area" + self.dashLine +
-            "Combinational Area:" + float +
-            "Noncombinational Area:" + float +
-            'Buf/Inv Area:' + float +
-            "Total Buffer Area:" + float +
-            "Total Inverter Area:" + float +
-            'Macro/Black Box Area:' + float +
-            "Net Area:" + float +
-            "Net XLength:" + float +
-            "Net YLength:" + float +
-            self.dashLine +
-            'Cell Area (netlist):' + float +
-            'Cell Area (netlist and physical only):'     + float +
-            "Net Length:" + float
+        cellArea = pp.Group("Area" + icComVar.dashLine +
+            "Combinational Area:" + icComVar.floatNum +
+            "Noncombinational Area:" + icComVar.floatNum +
+            'Buf/Inv Area:' + icComVar.floatNum +
+            "Total Buffer Area:" + icComVar.floatNum +
+            "Total Inverter Area:" + icComVar.floatNum +
+            'Macro/Black Box Area:' + icComVar.floatNum +
+            "Net Area:" + icComVar.floatNum +
+            "Net XLength:" + icComVar.floatNum +
+            "Net YLength:" + icComVar.floatNum +
+            icComVar.dashLine +
+            'Cell Area (netlist):' + icComVar.floatNum +
+            'Cell Area (netlist and physical only):'     + icComVar.floatNum +
+            "Net Length:" + icComVar.floatNum
         )
 
         designRule =pp.Group("Design Rules" +
-                             self.dashLine +
-                             "Total Number of Nets:" + integer +
-                             "Nets with Violations:" + integer +
-                             "Max Trans Violations:" + integer +
-                             "Max Cap Violations:" + integer +
-                             self.dashLine)
-
+                             icComVar.dashLine +
+                             "Total Number of Nets:" + icComVar.intNum +
+                             "Nets with Violations:" + icComVar.intNum +
+                             "Max Trans Violations:" + icComVar.intNum +
+                             "Max Cap Violations:"   + icComVar.intNum +
+                             icComVar.dashLine)
 
         qorAll = pp.Group(qorHeader +
                          pp.OneOrMore(sceTimGroup) +

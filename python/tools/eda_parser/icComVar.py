@@ -1,3 +1,5 @@
+import pyparsing as pp
+
 class icComVar():
     #Define the special variables
     PLUS, DASH = map(pp.Suppress, "+-")
@@ -5,10 +7,23 @@ class icComVar():
     UNDERSCORE, DOT, BSLASH, SLASH = map(pp.Literal, '_./\\')
     LPAR, RPAR = map(pp.Suppress, "()")
     SEMICOLON, DQUOTA = map(pp.Suppress, ';"')
-    SQOUTA, DQUTA = map(pp.Suppress, "\'\"")
+    SQUOTA = map(pp.Suppress, "'")
+    STAR = map(pp.Literal, '*')
 
     dashLine = pp.Suppress(pp.Group(pp.OneOrMore('-')))
     starLine = pp.Suppress(pp.Group(pp.OneOrMore('*')))
+    date     = pp.Word(pp.alphanums + " " + ":")
+
+    ##quota define
+    sQuoteString     = pp.QuotedString("'")
+    dQuoteString     = pp.QuotedString('"')
+    starQuoteString  = pp.QuotedString('*')
+    eqQuoteString    = pp.QuotedString('=')
+    tildeQuoteString = pp.QuotedString('~')
+    angleQuoteString = pp.QuotedString('<', endQuoteChar='>')
+    braceQuoteString = pp.QuotedString('{', endQuoteChar='}')
+    brackQuotaString = pp.QuotedString('[', endQuoteChar=']')
+    paraQuoteSting   = pp.QuotedString('(', endQuoteChar=')')
 
 
     #Define the name rule
@@ -25,7 +40,8 @@ class icComVar():
     pathCol     = pp.Word("Fanout" + "Cap" + "Trans" + "Incr" + "Path")
     clkType     = pp.Word("ideal" + "propagated")
     annoType    = pp.Word("&" + "*")
-
+    pathGroup   = pp.Word(pp.alphanums + '\*' + '_' + "'")
+    scenarioName= pp.Word(pp.alphanums + "_" + "'")
 
     #DEF varible
     orient       = pp.Word('N' + 'E' + 'W' + 'S' + 'FN' + 'FE' + 'FW' + 'FS')
@@ -35,7 +51,6 @@ class icComVar():
     pinUse       = pp.Word('SIGNAL' + "POWER" + "GROUND" + "CLOCK")
     propType     = pp.Word('INTERGER' + 'REAL' + 'STRING')
     objectType   = pp.Word("DESIGN" + "COMPONENT" + "NET" + "SPECIALNET" + "GROUP" + "ROW" + "COMPONENT" + "REGION")
-
 
     # polygon
     origX        = pp.Word(pp.nums + "*" + "-")
