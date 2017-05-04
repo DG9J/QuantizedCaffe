@@ -4,7 +4,7 @@ import shutil
 import re
 import gzip
 import pyparsing as pp
-import icComVar
+import icComVar as icVar
 
 
 class parse_def():
@@ -15,106 +15,139 @@ class parse_def():
         print "parsing" , self.def_file
 
     def read_def(self):
-        delimPair = pp.Word("[" + "]")
-        pinName =  icComVar.icComVar.hierName
-        instName = icComVar.icComVar.hierName
-        net_name = icComVar.icComVar.hierName
-        propName = icComVar.icComVar.flatName
-        propVal  = icComVar.icComVar.flatName
-        icComVar.intNum   = icComVar.icComVar.intNum
-        icComVar.flatName = icComVar.icComVar.flatName
-        rowName  = icComVar.icComVar.flatName
-        siteName = icComVar.icComVar.flatName
-        viaName  = icComVar.icComVar.flatName
-        ndrName  = icComVar.icComVar.flatName
+        pinName =  icVar.hierName
+        instName = icVar.hierName
+        net_name = icVar.hierName
+        propName = icVar.flatName
+        propVal  = icVar.flatName
+        flatName = icVar.flatName
+        intNum   = icVar.intNum
+        rowName  = icVar.flatName
+        siteName = icVar.flatName
+        viaName  = icVar.flatName
+        ndrName  = icVar.flatName
 
+        PLUS = icVar.PLUS
         # header
-        version     = pp.Group("VERSION" + self.float + icComVar.SEMICOLON)
-        dividerchar = pp.Group("DIVIDERCHAR" + pp.delimitedList(icComVar.dQuoteString) + icComVar.SEMICOLON)
-        busbitchars = pp.Group("BUSBITCHARS" + pp.delimitedList(icComVar.dQuoteString) + icComVar.SEMICOLON)
-        designName =  pp.Group("DESIGN" + icComVar.flatName + icComVar.SEMICOLON)
-        technology =  pp.Group("TECHNOLOGY" + icComVar.flatName + icComVar.SEMICOLON)
-        unit =        pp.Group("UNITS DISTANCE MICRONS" + icComVar.intNum + icComVar.SEMICOLON)
-        history =     pp.Group("HISTORY" + icComVar.flatName + icComVar.SEMICOLON)
-        property =    pp.Group("PROPERTYDEFINITIONS" + objectType + icComVar.flatName + propType + icComVar.flatName + "END PROPERTYDEFINITIONS ")
-        die_area = pp.Group("DIEAREA" + icComVar.polygon + icComVar.SEMICOLON)
-        compMaskShift = pp.Group(pp.oneOf("COMPONENTMASKSHIFT ") + pp.OneOrMore(icComVar.layerName))
-        maskShift = pp.Group("MASKSHIFT" + icComVar.intNum)
+        version     = pp.Group("VERSION" + icVar.floatNum + icVar.SEMICOLON)
+        dividerchar = pp.Group("DIVIDERCHAR" + pp.delimitedList(icVar.dquotes) + icVar.SEMICOLON)
+        busbitchars = pp.Group("BUSBITCHARS" + pp.delimitedList(icVar.dquotes) + icVar.SEMICOLON)
+        designName =  pp.Group("DESIGN" + icVar.flatName + icVar.SEMICOLON)
+        technology =  pp.Group("TECHNOLOGY" + icVar.flatName + icVar.SEMICOLON)
+        unit       =  pp.Group("UNITS DISTANCE MICRONS" + icVar.intNum + icVar.SEMICOLON)
+        history    =  pp.Group("HISTORY" + icVar.flatName + icVar.SEMICOLON)
+        property =    pp.Group("PROPERTYDEFINITIONS" + icVar.objectType + icVar.flatName + icVar.propType + icVar.flatName + "END PROPERTYDEFINITIONS ")
+        die_area = pp.Group("DIEAREA" + icVar.polygon + icVar.SEMICOLON)
+        compMaskShift = pp.Group(pp.oneOf("COMPONENTMASKSHIFT ") + pp.OneOrMore(icVar.layerName))
+        maskShift = pp.Group("MASKSHIFT" + icVar.intNum)
 
         #COMMON
-        #propDefine = pp.Group(self.icComVar.PLUS + "PROPERTY" + pp.OneOrMore(   LBRACE + propName + propVal + RBRACE) )
-        propDefine = pp.Group(self.icComVar.PLUS + "PROPERTY" + pp.OneOrMore(pp.delimitedList(braceQuoteString)))
+        #propDefine = pp.Group(self.PLUS + "PROPERTY" + pp.OneOrMore(   LBRACE + propName + propVal + RBRACE) )
+        propDefine = pp.Group(PLUS + "PROPERTY" + pp.OneOrMore(pp.delimitedList(icVar.braces)))
         # ROW
         
-        row = pp.Group("ROW" + rowName + siteName + icComVar.orig + icComVar.orient +
-                       pp.Optional("DO" + icComVar.intNum + "BY" + icComVar.intNum + pp.Optional("STEP" + icComVar.intNum + icComVar.intNum)) +
-                       pp.Optional(icComVar.PLUS + "PROPERTY" + pp.OneOrMore(LBRACE + icComVar.flatName + icComVar.flatName + RBRACE)) + icComVar.SEMICOLON)
+        row = pp.Group("ROW" + rowName + siteName + icVar.orig + icVar.orient +
+                       pp.Optional("DO" + icVar.intNum + "BY" + icVar.intNum + pp.Optional("STEP" + icVar.intNum + icVar.intNum)) +
+                       pp.Optional(PLUS + "PROPERTY" + pp.OneOrMore(pp.delimitedList(icVar.braces))) + icVar.SEMICOLON)
         rows = pp.Group(pp.OneOrMore(row))
 
         # TRACK SECTION
-        track = pp.Group("TRACKS" + icComVar.routDir + icComVar.intNum + "DO" + icComVar.intNum + "STEP" + icComVar.intNum +
-                          pp.Optional("MASK" + icComVar.intNum + pp.Optional("SAMEMASK")) +
-                          pp.Optional("LAYER"+ icComVar.layerName) + icComVar.SEMICOLON)
+        track = pp.Group("TRACKS" + icVar.routeDir + icVar.intNum + "DO" + icVar.intNum + "STEP" + icVar.intNum +
+                          pp.Optional("MASK" + icVar.intNum + pp.Optional("SAMEMASK")) +
+                          pp.Optional("LAYER"+ icVar.layerName) + ';')
         tracks = pp.Group(pp.OneOrMore(track))
 
         # VIA SECTION
-        viaRule = pp.Group(icComVar.PLUS + "VIARULE" + icComVar.flatName +
-                                    icComVar.PLUS + "CUTSIZE" + icComVar.intNum + icComVar.intNum +
-                                    icComVar.PLUS + "LAYERS" + icComVar.metalName + icComVar.cutName + icComVar.metalName +
-                                    icComVar.PLUS + "CUTSPACING" + icComVar.intNum + icComVar.intNum +
-                                    icComVar.PLUS + "ENCLOSE" + icComVar.intNum + icComVar.intNum + icComVar.intNum + icComVar.intNum +
-                                    pp.Optional(icComVar.PLUS + "ROWCOL" + icComVar.intNum + icComVar.intNum) +
-                                    pp.Optional(icComVar.PLUS + "icComVar.origIN" + icComVar.intNum + icComVar.intNum) +
-                                    pp.Optional(icComVar.PLUS + "OFFSET" + icComVar.intNum + icComVar.intNum + icComVar.intNum + icComVar.intNum) +
-                                    pp.Optional(icComVar.PLUS + "PATTERN" + icComVar.flatName)
+        viaRule = pp.Group(PLUS + "VIARULE" + icVar.flatName +
+                                    PLUS + "CUTSIZE" + icVar.intNum + icVar.intNum +
+                                    PLUS + "LAYERS" + icVar.metalName + icVar.cutName + icVar.metalName +
+                                    PLUS + "CUTSPACING" + icVar.intNum + icVar.intNum +
+                                    PLUS + "ENCLOSE" + icVar.intNum + icVar.intNum + icVar.intNum + icVar.intNum +
+                                    pp.Optional(PLUS + "ROWCOL" + icVar.intNum + icVar.intNum) +
+                                    pp.Optional(PLUS + "ORIGIN" + icVar.intNum + icVar.intNum) +
+                                    pp.Optional(PLUS + "OFFSET" + icVar.intNum + icVar.intNum + icVar.intNum + icVar.intNum) +
+                                    pp.Optional(PLUS + "PATTERN" + icVar.flatName)
                         )
-        viaRect   = pp.Group(icComVar.PLUS + "RECT"    + icComVar.layerName + pp.Optional(icComVar.PLUS + "MASK" + icComVar.intNum ) + icComVar.rectangle)
-        viaPoly   = pp.Group(icComVar.PLUS + "icComVar.polygon" + icComVar.layerName + pp.Optional(icComVar.PLUS + "MASK" + icComVar.intNum) +  icComVar.polygon)
-        viaDefine = pp.Group(icComVar.DASH + viaName + pp.Optional(viaRule) + pp.ZeroOrMore(viaRect) + pp.ZeroOrMore(viaPoly) + icComVar.SEMICOLON )
-        viaSect   = pp.Group("VIAS" + icComVar.intNum + icComVar.SEMICOLON + pp.OneOrMore(viaDefine) + "END VIAS")
+        viaRect   = pp.Group(PLUS + "RECT"    + icVar.layerName + pp.Optional(PLUS + "MASK" + icVar.intNum ) + icVar.rectangle)
+        viaPoly   = pp.Group(PLUS + "icVar.polygon" + icVar.layerName + pp.Optional(PLUS + "MASK" + icVar.intNum) +  icVar.polygon)
+        viaDefine = pp.Group(icVar.DASH + viaName + pp.Optional(viaRule) + pp.ZeroOrMore(viaRect) + pp.ZeroOrMore(viaPoly) + icVar.SEMICOLON )
+        viaSect   = pp.Group("VIAS" + icVar.intNum + icVar.SEMICOLON + pp.OneOrMore(viaDefine) + "END VIAS")
 
         #NonDefault rule
-        ndrLayer = pp.Group(icComVar.PLUS + "LAYER" + icComVar.layerName + "WIDTH" + icComVar.intNum +
-                                            pp.Optional("DIAGWIDTH" + icComVar.intNum) +
-                                            pp.Optional("SPACING"   + icComVar.intNum) +
-                                            pp.Optional("WIREEXT"   +  icComVar.flatName) )
+        ndrLayer = pp.Group(PLUS + "LAYER" + icVar.layerName + "WIDTH" + icVar.intNum +
+                                            pp.Optional("DIAGWIDTH" + icVar.intNum) +
+                                            pp.Optional("SPACING"   + icVar.intNum) +
+                                            pp.Optional("WIREEXT"   +  icVar.flatName) )
 
 
-        ndrDefine  = pp.Group(icComVar.DASH + icComVar.flatName +
-                            pp.Optional(icComVar.PLUS + "HARDSPACING") +
+        ndrDefine  = pp.Group(icVar.DASH + icVar.flatName +
+                            pp.Optional(PLUS + "HARDSPACING") +
                             pp.OneOrMore(ndrLayer) +
-                            pp.Optional(icComVar.PLUS + "VIA" + viaName) +
-                            pp.Optional(icComVar.PLUS + "VIARULE" + icComVar.flatName) +
-                            pp.ZeroOrMore(icComVar.PLUS + "MINCUTS" + icComVar.cutName + icComVar.intNum) +
+                            pp.Optional(PLUS + "VIA" + viaName) +
+                            pp.Optional(PLUS + "VIARULE" + icVar.flatName) +
+                            pp.ZeroOrMore(PLUS + "MINCUTS" + icVar.cutName + icVar.intNum) +
                             pp.ZeroOrMore(propDefine) +
-                            icComVar.SEMICOLON)
-        ndrSect    = pp.Group("NONDEFAULTRULES" + icComVar.intNum + icComVar.SEMICOLON + pp.OneOrMore(ndrDefine) + "END NONDEFAULTRULES" )
+                            icVar.SEMICOLON)
+        ndrSect    = pp.Group("NONDEFAULTRULES" + icVar.intNum + icVar.SEMICOLON + pp.OneOrMore(ndrDefine) + "END NONDEFAULTRULES" )
 
         # REGION SECTION
-        regionDefine = pp.Group(icComVar.DASH + icComVar.flatName + icComVar.polygon +
-                                pp.Optional(icComVar.PLUS + "TYPE" + pp.oneOf("FENCE GUIDE")) +
+        regionDefine = pp.Group(icVar.DASH + icVar.flatName + icVar.polygon +
+                                pp.Optional(PLUS + "TYPE" + pp.oneOf("FENCE GUIDE")) +
                                 pp.ZeroOrMore(propDefine) +
-                                icComVar.SEMICOLON)
-        regionSect  = pp.Group("REGIONS" + icComVar.intNum + icComVar.SEMICOLON + pp.OneOrMore(regionDefine) + "END REGIONS")
+                                icVar.SEMICOLON)
+        regionSect  = pp.Group("REGIONS" + icVar.intNum + icVar.SEMICOLON + pp.OneOrMore(regionDefine) + "END REGIONS")
 
         # COMPONENTS
-        cellLoc  = pp.Group(icComVar.PLUS + pp.oneOf("FIXED COVER PLACED UNPLACED") + pp.Optional(icComVar.orig)  + pp.Optional(icComVar.orient) )
-        compDefine = pp.Group(icComVar.DASH + icComVar.hierName + icComVar.flatName +
-                              pp.Optional(icComVar.PLUS + "EEQMASTER" + icComVar.flatName) +
-                              pp.Optional(icComVar.PLUS + "SOURCE" + pp.oneOf("NETLIST DIST USER TIMING")) +
+        cellLoc  = pp.Group(PLUS + pp.oneOf("FIXED COVER PLACED UNPLACED") + pp.Optional(icVar.orig)  + pp.Optional(icVar.orient) )
+        compDefine = pp.Group(icVar.DASH + icVar.hierName + icVar.flatName +
+                              pp.Optional(PLUS + "EEQMASTER" + icVar.flatName) +
+                              pp.Optional(PLUS + "SOURCE" + pp.oneOf("NETLIST DIST USER TIMING")) +
                               pp.Optional(cellLoc) +
-                              pp.Optional(icComVar.PLUS + maskShift) +
-                              pp.Optional(icComVar.PLUS + "HALO" + pp.Optional("SOFT") + icComVar.rectangle) +
-                              pp.Optional(icComVar.PLUS + "ROUTEHALO" + icComVar.intNum + icComVar.layerName + icComVar.layerName) +
-                              pp.Optional(icComVar.PLUS + "WEIGHT" + icComVar.intNum) +
-                              pp.Optional(icComVar.PLUS + "REGION" + icComVar.flatName) +
+                              pp.Optional(PLUS + maskShift) +
+                              pp.Optional(PLUS + "HALO" + pp.Optional("SOFT") + icVar.rectangle) +
+                              pp.Optional(PLUS + "ROUTEHALO" + icVar.intNum + icVar.layerName + icVar.layerName) +
+                              pp.Optional(PLUS + "WEIGHT" + icVar.intNum) +
+                              pp.Optional(PLUS + "REGION" + icVar.flatName) +
                               pp.Optional(propDefine) +
-                              icComVar.SEMICOLON
+                              icVar.SEMICOLON
                               )
-        compSect = pp.Group("COMPONENTS" + icComVar.intNum  + icComVar.SEMICOLON + pp.OneOrMore(compDefine) + "END COMPONENTS")
+        compSect = pp.Group("COMPONENTS" + icVar.intNum  + icVar.SEMICOLON + pp.OneOrMore(compDefine) + "END COMPONENTS")
 
         ##pin section
+        portLayerDefine = pp.Group(PLUS + "layer" + icVar.metalName +
+                                  pp.Optional("MASK" + intNum) +
+                                  pp.Optional("SPACING" + intNum ) +
+                                  pp.Optional("DESIGNRULEWIDTH" + intNum) +
+                                  icVar.rectangle
+                               )
+        portPolygonDefine = pp.Group(PLUS + "POLYGEN" + icVar.metalName +
+                                     pp.Optional("MASK" + icVar.intNum) +
+                                     pp.Optional("SPACING" + icVar.intNum ) +
+                                     pp.Optional("DESIGNRULEWIDTH" + icVar.intNum) +
+                                     icVar.polygon
+                                     )
+        portViaDefine = pp.Group(PLUS + "VIA" + viaName +
+                                 pp.Optional("MASK" + icVar.intNum) +
+                                 icVar.orig
+                                 )
 
+
+        portDefine = pp.Group(PLUS + "PORT" +
+                              portLayerDefine +
+                              portPolygonDefine +
+                              portViaDefine
+                              )
+        portAttrDefine = pp.Group(PLUS + "SPECIAL" +
+                                  PLUS + "DIRECTION" + icVar.pinDir +
+                                  PLUS + "NETEXPR" + pp.delimitedList(icVar.dquotes) +
+                                  PLUS + "SUPPLYSENSITIVITY" + pinName +
+                                  PLUS + "GROUNDSENSITIVITY" + pinName +
+                                  PLUS + "USE" + pp.oneOf("SIGNAL POWER GROUND CLOCK TIEOFF ANALOG SCAN RESET") +
+                                  PLUS + "ANTENNAPINPARTIALMETALAREA"   + float + pp.Optional("LAYER" + icVar.metalName) +
+                                  PLUS + "ANTENNAPINPARTIALMETALSIDEAREA" +  float + pp.Optional("LAYER" + icVar.metalName) +
+                                  PLUS + "ANTENNAPINPARTIALCUTAREA" +  float + pp.Optional("LAYER" + icVar.metalName) +
+                                  PLUS + "ANTENNAPINDIFFAREA" + float + pp
+                                  )
         rpt_file = self.def_file
         # print rpt_file
         if os.path.isfile(rpt_file):
@@ -127,8 +160,8 @@ class parse_def():
             #print rpt_string
             #rst = rows.searchString(rpt_string)
             #rst = tracks.searchString(rpt_string)
-            #rst = viaSect.searchString(rpt_string)
-            #rst = viaSect.searchString(rpt_string)
+            rst = viaSect.searchString(rpt_string)
+            print len(rst) , rst
             #rst = ndrLayer.searchString(rpt_string)
             #rst = ndrDefine.searchString(rpt_string)
             #rst = ndrSect.searchString(rpt_string)
@@ -136,6 +169,6 @@ class parse_def():
             #rst = regionDefine.searchString(rpt_string)
             #rst  = regionSect.searchString(rpt_string)
             #rst = compDefine.searchString(rpt_string)
-            rst = compSect.searchString(rpt_string)
+            #rst = compSect.searchString(rpt_string)
             print len(rst) , rst
 

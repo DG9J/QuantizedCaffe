@@ -12,8 +12,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-
-
 def main():
     testDef()
 
@@ -63,6 +61,7 @@ def testQor():
 
     print basNickName,basIccQor.criticalData()
     print refNickNmae,refIccQor.criticalData()
+
 def plotList():
     ft_delay_file = "/home/yaguo/ariel/df_cs_umc_t8.ft.tt0p65v.delay.list"
     title = "honrizontal tt0p65v 100um"

@@ -7,9 +7,41 @@ import shutil
 import re
 import gzip
 
+#!/usr/bin/env python
+
+import sys
+import os
+import shutil
+import re
+import gzip
+import glob
 
 
 def main():
+    copy_tile_def()
+
+def copy_tile_def():
+    Files = glob.glob('/proj/unb_scratch_6/ariel/04092017_tcdx/main/pd/tiles/df_*_DEF/data/Synthesize.placed.def.gz')
+    Files = glob.glob('/proj/unb_scratch_6/ariel/04092017_tcdx/main/pd/tiles/df_*_DEF/data/Synthesize.v.gz')
+    Files = glob.glob('/proj/ariel_pd_vol97/yaguo/DF_TILES/defs_NLC3/*.def.gz')
+    Files = glob.glob('/proj/unb_scratch_6/ariel/04042017_soc/main/pd/tiles/df_*ariel_preNLA_TileBuilder_Apr04_1748_22453_ariel_regression/data/Synthesize.v.gz')
+    for f in Files:
+        tileFile =  f.split('/')[8]
+        regex = re.compile(r'(\S+)_ariel_preNLA_TileBuilder_Apr04_1748_22453_ariel_regression')
+        match = regex.search(tileFile)
+        if match:
+            tileName =  match.group(1)
+        tilePath = "/proj/ariel_pd_vol97/yaguo/DF_TILES/NLC/" + tileName
+        #print tileName, tileFile, f
+        #file = f.split('/')[-1]
+        if not os.path.exists(tilePath):
+            os.makedirs(tilePath)
+        #new_f = tile + "/" + file
+        new_f  = tilePath + "/Synthesize.v.gz"
+        shutil.copy2(f,new_f)
+        print new_f , f
+
+def run_df():
     rls_dir = '/proj/ariel/a0/tile_misc/rundir_link/W14_20170403_fp01/'
     rt_rpt = '/rpts/I2Route/'
     short_dir = '/home/yaguo/ariel/short/'
@@ -51,7 +83,7 @@ def main():
                         drc['spacing'] = int(match.group(1))
             #else:
             #    print rpt_file_path
-            print(tn,',', drc['total'],',', drc['spacing']+drc['short'],file=f_drc_sum)
+            #print(tn,',', drc['total'],',', drc['spacing']+drc['short'],file=f_drc_sum)
             #f_drc_sum.write(tn,drc['total'], drc['spacing']+drc['short'])
     f_drc_sum.close()
 
