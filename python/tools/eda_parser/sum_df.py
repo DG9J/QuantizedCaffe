@@ -1,12 +1,3 @@
-!/usr/bin/env python
-
-from __future__ import print_function
-import sys
-import os
-import shutil
-import re
-import gzip
-
 #!/usr/bin/env python
 
 import sys
@@ -19,28 +10,98 @@ import glob
 
 def main():
     copy_tile_def()
+    copy_tile_gv()
+
+    spg_def_gv_check()
 
 def copy_tile_def():
-    Files = glob.glob('/proj/unb_scratch_6/ariel/04092017_tcdx/main/pd/tiles/df_*_DEF/data/Synthesize.placed.def.gz')
-    Files = glob.glob('/proj/unb_scratch_6/ariel/04092017_tcdx/main/pd/tiles/df_*_DEF/data/Synthesize.v.gz')
-    Files = glob.glob('/proj/ariel_pd_vol97/yaguo/DF_TILES/defs_NLC3/*.def.gz')
-    Files = glob.glob('/proj/unb_scratch_6/ariel/04042017_soc/main/pd/tiles/df_*ariel_preNLA_TileBuilder_Apr04_1748_22453_ariel_regression/data/Synthesize.v.gz')
-    for f in Files:
+    Files1 = glob.glob('/proj/unb_scratch_6/ariel/04092017_tcdx/main/pd/tiles/df_*_DEF/data/Synthesize.placed.def.gz')
+    Files2 = glob.glob('/proj/ariel_pd_vol97/yaguo/DF_TILES/defs_NLC3/*.def.gz')
+
+    for f in Files1:
+       tileFile = f.split('/')[8]
+       regex = re.compile(r'df_\S+(df\S+)_DEF')
+       match = regex.search(tileFile)
+       print tileFile
+       if match:
+           tileName = match.group(1)
+       tilePath = "/proj/ariel_pd_vol97/yaguo/DF_TILES/NLC/" + tileName
+
+       if not os.path.exists(tilePath):
+           os.makedirs(tilePath)
+       new_f  = tilePath + "/Synthesize.placed.def.gz"
+       shutil.copy2(f, new_f)
+       print new_f, f
+
+    for f in Files2:
+       tileFile =  f.split('/')[6]
+       regex = re.compile(r'(\S+).def.gz')
+       match = regex.search(tileFile)
+       print tileFile
+       if match:
+           tileName =  match.group(1)
+       tilePath = "/proj/ariel_pd_vol97/yaguo/DF_TILES/NLC/" + tileName
+
+       if not os.path.exists(tilePath):
+           os.makedirs(tilePath)
+       new_f = tilePath + "/Synthesze.placed.def.gz"
+       shutil.copy2(f,new_f)
+       print new_f , f
+
+
+
+def copy_tile_gv():
+    Files1 = glob.glob('/proj/unb_scratch_6/ariel/04092017_tcdx/main/pd/tiles/df_*_DEF/data/Synthesize.v.gz')
+    Files2 = glob.glob('/proj/unb_scratch_6/ariel/04042017_soc/main/pd/tiles/df_*ariel_preNLA_TileBuilder_Apr04_1748_22453_ariel_regression/data/Synthesize.v.gz')
+
+    for f in Files1:
+        tileFile = f.split('/')[8]
+        regex = re.compile(r'df_\S+(df\S+)_DEF')
+        match = regex.search(tileFile)
+        print tileFile
+        if match:
+            tileName = match.group(1)
+        tilePath = "/proj/ariel_pd_vol97/yaguo/DF_TILES/NLC/" + tileName
+
+        if not os.path.exists(tilePath):
+            os.makedirs(tilePath)
+        new_f  = tilePath + "/Synthesize.v.gz"
+        shutil.copy2(f, new_f)
+        print new_f, f
+    for f in Files2:
         tileFile =  f.split('/')[8]
         regex = re.compile(r'(\S+)_ariel_preNLA_TileBuilder_Apr04_1748_22453_ariel_regression')
         match = regex.search(tileFile)
+        print tileFile
         if match:
             tileName =  match.group(1)
+
         tilePath = "/proj/ariel_pd_vol97/yaguo/DF_TILES/NLC/" + tileName
-        #print tileName, tileFile, f
-        #file = f.split('/')[-1]
+
         if not os.path.exists(tilePath):
             os.makedirs(tilePath)
-        #new_f = tile + "/" + file
         new_f  = tilePath + "/Synthesize.v.gz"
         shutil.copy2(f,new_f)
         print new_f , f
 
+def spg_def_gv_check():
+    fileDir = glob.glob('/proj/ariel_pd_vol97/yaguo/DF_TILES/NLC/*')
+
+    for d in fileDir:
+        tileName = d.split('/')[6]
+        defFile = d + "/Synthesize.placed.def.gz"
+        gvFile  = d + "/Synthesize.v.gz"
+        #if not os.path.exists(defFile):
+        #    print "missing :" , defFile
+        #if not os.path.exists(gvFile):
+        #    print "missing :", gvFile
+        if os.path.exists(gvFile):
+            if not os.path.exists(defFile):
+                #print "SPG" , d
+            #else:
+                print "no def" , tileName
+        else:
+            print "no  gv:", tileName
 def run_df():
     rls_dir = '/proj/ariel/a0/tile_misc/rundir_link/W14_20170403_fp01/'
     rt_rpt = '/rpts/I2Route/'
