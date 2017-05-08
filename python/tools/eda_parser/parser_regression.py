@@ -13,7 +13,9 @@ import numpy as np
 
 
 def main():
-    testDef()
+    #testDef()
+    #plotList()
+    testFtRpt()
 
 def testDef():
     def_file = r'D:/AMD/parser_case/Place.def'
@@ -32,6 +34,7 @@ def testPtRpt():
 def testFtRpt():
     ##regression pt unconstraint report
     rpt_file = "/home/yaguo/ariel/df_tcdxd_t_16.ft.tt0p9v.rpt"
+    rpt_file = "/home/yaguo/ariel/df_cs_umc_t_8.ft.nlc.tt0p9v.rpt"
     # rpt_file = "/proj/ariel_pd_vol38/yaguo/df_tcdx_t16/main/pd/tiles/df_tcdxd_t_16_r1_buf_test3_1_TileBuilder_Apr10_2238_13535_GUI/df_tcdxd_t_16.ft.tt0p9v.rpt.small"
     # print "start time", datetime.datetime.now()
     p_pt_rpt = rpt.ptRpt(rpt_file)
@@ -63,11 +66,12 @@ def testQor():
     print refNickNmae,refIccQor.criticalData()
 
 def plotList():
-    ft_delay_file = "/home/yaguo/ariel/df_cs_umc_t8.ft.tt0p65v.delay.list"
-    title = "honrizontal tt0p65v 100um"
+    #ft_delay_file = "/home/yaguo/ariel/df_cs_umc_t8.ft.NLC.tt0p65v.delay.list"
+    #title = "honrizontal tt0p65v 100um"
 
-    #ft_delay_file = "/home/yaguo/ariel/df_cs_umc_t8.ft.tt0p9v.delay.list"
-    #title = "honrizontal tt0p9v 100um"
+    ft_delay_file = "/home/yaguo/ariel/df_cs_umc_t8.ft.NLC.tt0p9v.delay.list"
+    ft_delay_file = "/home/yaguo/Downloads/df_cs_umc_t_8.ft.nlc.tt0p9v.delay.list"
+    title = "honrizontal tt0p9v 100um"
 
     #ft_delay_file = "/home/yaguo/ariel/df_tcdxd_t_16.ft.tt0p9v.delay.list"
     #title = "vertical tt0p9v 100um"
@@ -78,7 +82,7 @@ def plotList():
         lines = f.read().splitlines()
     delay_list =   np.array(lines).astype(np.float)
 
-    #print delay_list.sum(),delay_list.max(),delay_list.min(),delay_list.mean()
+    print delay_list.max(),delay_list.min(),delay_list.mean()
     #print delay_list
 
     bin_min = int(delay_list.min()) - 1

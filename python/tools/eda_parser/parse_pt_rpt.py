@@ -20,7 +20,7 @@ class ptRpt():
         self.launch_latency = []
         self.capture_latency = []
         self.length = []
-        self.icVar.pathType = []
+        self.pathType = []
         self.max_derate_factor = []
         self.sigma = []
         self.column = []
@@ -36,23 +36,26 @@ class ptRpt():
         print "init parse_pt_rpt"
 
     def read_ft_uncons(self):
-        trans       = icVar.floatNumNum
-        delay       = icVar.floatNumNum
-        arrive      = icVar.floatNumNum
-        cap         = icVar.floatNumNum
-        factor      = icVar.floatNumNum
-        sigma       = icVar.floatNumNum
-        uncertainty = icVar.floatNumNum
-        slack       = icVar.floatNumNum
+        trans       = icVar.floatNum
+        delay       = icVar.floatNum
+        arrive      = icVar.floatNum
+        cap         = icVar.floatNum
+        factor      = icVar.floatNum
+        sigma       = icVar.floatNum
+        uncertainty = icVar.floatNum
+        slack       = icVar.floatNum
 
-        transZero  = icVar.floatNumZero
-        delayZero  = icVar.floatNumZero
+        transZero  = icVar.floatZero
+        delayZero  = icVar.floatZero
         fanout      = icVar.intNum
 
         netName    = icVar.hierName
         instName   = icVar.hierName
         pinName    = icVar.hierName
         clkName    = icVar.hierName
+
+        LPAR = icVar.LPAR
+        RPAR = icVar.RPAR
 
         icVar.toggleType       =  pp.Word("r" + "f" + "rise" + "fall")
         clockName        =  icVar.hierName
@@ -63,28 +66,28 @@ class ptRpt():
         path_type_pat   = pp.Group("Path Type" + icVar.COLON + icVar.pathType)
         derate_pat      = pp.Group(icVar.pathType + "Timing Check Derating Factor" + icVar.COLON + factor )
         sigma_pat       = pp.Group("Sigma" + icVar.COLON +  sigma )
-        column_pat      = pp.Group("Point"   + pp.OneOrMore(pathColumn))
+        column_pat      = pp.Group("Point"   + pp.OneOrMore(icVar.pathCol))
         clk_pat         = pp.Group("clock"+ clkName + LPAR + icVar.toggleType + "edge" + RPAR + trans + delay + arrive)
-        lch_clk_pin_pat = pp.Group(pinName + LPAR + lib_cell_name + RPAR + delay + icVar.annoType + arrive + icVar.toggleType)
+        lch_clk_pin_pat = pp.Group(pinName + pp.delimitedList(icVar.paras) + delay + icVar.annoType + arrive + icVar.toggleType)
         input_delay     = pp.Group("input external delay" + delay + arrive +icVar.toggleType)
 
-        flat_pin_pat    = pp.Group(pinName+ LPAR + lib_cell_name + RPAR + trans + delay + pp.ZeroOrMore(icVar.annoType) + arrive + icVar.toggleType)
-        flat_net_pat    = pp.Group(netName + LPAR + "net" + RPAR + fanout + cap)
+        flat_pin_pat    = pp.Group(pinName+ pp.delimitedList(icVar.paras) + trans + delay + pp.ZeroOrMore(icVar.annoType) + arrive + icVar.toggleType)
+        flat_net_pat    = pp.Group(netName + pp.delimitedList(icVar.paras) + fanout + cap)
 
-        hier_pin_pat    = pp.Group(pinName + LPAR + moduleName + RPAR + transZero +  delayZero + pp.ZeroOrMore(icVar.annoType)+ arrive + icVar.toggleType)
-        hier_net_pat    = pp.Group(netName + LPAR + "net" + RPAR)
+        hier_pin_pat    = pp.Group(pinName +  pp.delimitedList(icVar.paras)+ transZero +  delayZero + pp.ZeroOrMore(icVar.annoType)+ arrive + icVar.toggleType)
+        hier_net_pat    = pp.Group(netName + pp.delimitedList(icVar.paras) )
 
-        flat_io_pat     = pp.Group(pinName+ LPAR + pp.oneOf("in net out ") + RPAR + trans + delay + pp.ZeroOrMore(icVar.annoType) + arrive + icVar.toggleType)
+        flat_io_pat     = pp.Group(pinName+  LPAR + pp.oneOf("in net out ") + RPAR + trans + delay + pp.ZeroOrMore(icVar.annoType) + arrive + icVar.toggleType)
         clk_uncer_pat   = pp.Group("clock uncertainty" + uncertainty + arrive)
-        clk_nw_pat      = pp.Group("clock network delay" + LPAR + clkType + RPAR +  delay + arrive )
+        clk_nw_pat      = pp.Group("clock network delay" +  pp.delimitedList(icVar.paras) +  delay + arrive )
         crpr_pat        = pp.Group("clock reconvergence pessimism" + delay + arrive)
-        cap_clk_pin_pat = pp.Group(pinName + LPAR + lib_cell_name + RPAR  + arrive + icVar.toggleType)
+        cap_clk_pin_pat = pp.Group(pinName +   pp.delimitedList(icVar.paras) + arrive + icVar.toggleType)
         lib_setup_pat   = pp.Group("library setup time" + delay + arrive)
         data_req_pat    = pp.Group("data required time" + arrive)
         data_arr_pat    = pp.Group("data arrival time" + arrive)
         stat_adj_pat    = pp.Group("statistical adjustment" + delay + arrive)
-        slack_pat       = pp.Group("slack" + LPAR +"VIOLATED" + RPAR + slack  )
-        unconst_path    = pp.Group(LPAR + "Path is unconstrained" + RPAR)
+        slack_pat       = pp.Group("slack" +  pp.delimitedList(icVar.paras) + slack  )
+        unconst_path    = pp.Group( LPAR + "Path is unconstrained" + RPAR)
        
         data_path_pat = pp.Group(pp.OneOrMore(flat_pin_pat | flat_net_pat |flat_io_pat | hier_net_pat |hier_pin_pat))
 
@@ -94,7 +97,7 @@ class ptRpt():
             path_group_pat+
             path_type_pat +
             derate_pat +
-            sigma_pat +
+            sigma_pat
             column_pat +
             icVar.dashLine +
             input_delay +
@@ -110,8 +113,9 @@ class ptRpt():
                 gzipfile = gzip.open(rpt_file,'r')
                 rpt_string  = gzipfile.read()
             else:
-                file  = open(rpt_file,"r")
-                rpt_string = file.read()
+                #file  = open(rpt_file,"r")
+                #rpt_string = file.read()
+
 
             #print  len(rpt_string)
             #result = sp_pat.searchString(rpt_string)
@@ -155,12 +159,11 @@ class ptRpt():
             #    print sp_result[i][0][2]
             #print len(pt_rpt_db), len(pt_rpt_db[0]),len(pt_rpt_db[0][0])
             self.length =  len(self.rpt_list)
-            for i in range(0, self.length):
+            #for i in range(0, self.length):
                 #print self.rpt_list[i][0][-3][-1]
-                self.startpoint.append(self.rpt_list[i][0][0][2])
-                self.endpoint.append(self.rpt_list[i][0][1][2])
-                self.arrive_time.append(self.rpt_list[i][0][-3][-1])
-
+                #self.startpoint.append(self.rpt_list[i][0][0][2])
+                #self.endpoint.append(self.rpt_list[i][0][1][2])
+                #self.arrive_time.append(self.rpt_list[i][0][-3][-1])
                 #self.clock.append(self.rpt_list[i][0][2][2])
                 #self.icVar.pathType.append(self.rpt_list[i][0][3])
                 #self.max_derate_factor.append(self.rpt_list[i][0][4][3])
@@ -177,12 +180,7 @@ class ptRpt():
                 #self.data_req_time.append(self.rpt_list[i][0][18][1])
                 #self.stat_adj.append(self.rpt_list[i][0][23][1])
                 #self.slack.append(self.rpt_list[i][0][2])
-
-
-
-
                 #print self.rpt_list[i][0][24]
-
             return self.rpt_list
 
 
@@ -197,8 +195,8 @@ class ptRpt():
         uncertainty = icVar.floatNum
         slack       = icVar.floatNum
 
-        transZero   = icVar.floatNumZero
-        delayZero   = icVar.floatNumZero
+        transZero   = icVar.floatZero
+        delayZero   = icVar.floatZero
         fanout      = icVar.intNum
         instName    = icVar.hierName
         netName     = icVar.hierName
