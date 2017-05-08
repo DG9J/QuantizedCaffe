@@ -6,6 +6,7 @@ import re
 import gzip
 import pyparsing as pp
 import icComVar as icVar
+import fileinput as fi
 
 class ptRpt():
     def __init__ (self,pt_rpt_file):
@@ -97,7 +98,7 @@ class ptRpt():
             path_group_pat+
             path_type_pat +
             derate_pat +
-            sigma_pat
+            sigma_pat +
             column_pat +
             icVar.dashLine +
             input_delay +
@@ -113,6 +114,16 @@ class ptRpt():
                 gzipfile = gzip.open(rpt_file,'r')
                 rpt_string  = gzipfile.read()
             else:
+                section = ''
+                for line in fi.input(rpt_file):
+                    result = pt_path_pat()
+                    if len(result) < 1 :
+                        section = section + line.rstrip()
+                        print section
+                    else:
+                        section = ''
+                        print "match", fi.filelineno()
+
                 #file  = open(rpt_file,"r")
                 #rpt_string = file.read()
 
@@ -147,7 +158,7 @@ class ptRpt():
             #return
             #print "aa"
             #pt_rpt_db = pt_path_pat.searchString(rpt_string)
-            self.rpt_list = pt_path_pat.searchString(rpt_string)
+            #self.rpt_list = pt_path_pat.searchString(rpt_string)
             #print      self.rpt_list
             #return
             #rs = icVar.dashLine.searchString(rpt_string)
@@ -158,7 +169,7 @@ class ptRpt():
             #for i in range(0,len(result)):
             #    print sp_result[i][0][2]
             #print len(pt_rpt_db), len(pt_rpt_db[0]),len(pt_rpt_db[0][0])
-            self.length =  len(self.rpt_list)
+            #self.length =  len(self.rpt_list)
             #for i in range(0, self.length):
                 #print self.rpt_list[i][0][-3][-1]
                 #self.startpoint.append(self.rpt_list[i][0][0][2])
@@ -181,9 +192,7 @@ class ptRpt():
                 #self.stat_adj.append(self.rpt_list[i][0][23][1])
                 #self.slack.append(self.rpt_list[i][0][2])
                 #print self.rpt_list[i][0][24]
-            return self.rpt_list
-
-
+            #return self.rpt_list
 
     def readPtRpt(self):
         trans       = icVar.floatNum
