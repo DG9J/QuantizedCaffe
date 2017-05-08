@@ -47,9 +47,10 @@ orient       = pp.Word('N' + 'E' + 'W' + 'S' + 'FN' + 'FE' + 'FW' + 'FS')
 routeDir     = pp.Word('X' + 'Y')
 placeStatus  = pp.Word('PLACED' + "FIXED" + "COVER")
 pinDir       = pp.Word('INPUT' + "OUTPUT" + "INOUT")
-pinUse       = pp.Word('SIGNAL' + "POWER" + "GROUND" + "CLOCK")
+pinUse       = pp.oneOf(" SIGNAL POWGR GROUND CLOCK TIEOFF ANALOG SCAN RESET")
 propType     = pp.Word('INTERGER' + 'REAL' + 'STRING')
 objectType   = pp.Word("DESIGN" + "COMPONENT" + "NET" + "SPECIALNET" + "GROUP" + "ROW" + "COMPONENT" + "REGION")
+pinQuota     = pp.QuotedString('PINS',endQuoteChar="END PINS")
 
 # polygon
 origX        = pp.Word(pp.nums + "*" + "-")

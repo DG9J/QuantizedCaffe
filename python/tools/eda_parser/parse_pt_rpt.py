@@ -5,7 +5,7 @@ import shutil
 import re
 import gzip
 import pyparsing as pp
-import icVar as icVar
+import icComVar as icVar
 
 class ptRpt():
     def __init__ (self,pt_rpt_file):

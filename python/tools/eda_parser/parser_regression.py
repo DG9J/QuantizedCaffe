@@ -18,9 +18,9 @@ def main():
 def testDef():
     def_file = r'D:/AMD/parser_case/Place.def'
     def_fp = p_def.parse_def(def_file)
-    print "start time", datetime.datetime.now()
+    #print "start time", datetime.datetime.now()
     print def_fp.read_def()
-    print "start time", datetime.datetime.now()
+    #print "start time", datetime.datetime.now()
 
 def testPtRpt():
     ##regression pt report

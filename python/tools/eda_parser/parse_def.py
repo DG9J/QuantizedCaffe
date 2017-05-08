@@ -114,40 +114,54 @@ class parse_def():
         compSect = pp.Group("COMPONENTS" + icVar.intNum  + icVar.SEMICOLON + pp.OneOrMore(compDefine) + "END COMPONENTS")
 
         ##pin section
-        portLayerDefine = pp.Group(PLUS + "layer" + icVar.metalName +
+        portLayerDefine = pp.Group(PLUS + "LAYER" + icVar.layerName +
                                   pp.Optional("MASK" + intNum) +
-                                  pp.Optional("SPACING" + intNum ) +
+                                  pp.Optional("SPACING" + intNum) +
                                   pp.Optional("DESIGNRULEWIDTH" + intNum) +
                                   icVar.rectangle
                                )
-        portPolygonDefine = pp.Group(PLUS + "POLYGEN" + icVar.metalName +
+        portPolygonDefine = pp.Group(PLUS + "POLYGON" + icVar.layerName +
                                      pp.Optional("MASK" + icVar.intNum) +
                                      pp.Optional("SPACING" + icVar.intNum ) +
                                      pp.Optional("DESIGNRULEWIDTH" + icVar.intNum) +
-                                     icVar.polygon
-                                     )
+                                     icVar.polygon)
         portViaDefine = pp.Group(PLUS + "VIA" + viaName +
                                  pp.Optional("MASK" + icVar.intNum) +
                                  icVar.orig
                                  )
-
+        portStatDefine = pp.Group(pp.oneOf("COVER PLACED FIXED") + icVar.orig + icVar.orient)
 
         portDefine = pp.Group(PLUS + "PORT" +
-                              portLayerDefine +
-                              portPolygonDefine +
-                              portViaDefine
+                              pp.Optional(portLayerDefine) +
+                              pp.Optional(portPolygonDefine) +
+                              pp.Optional(portViaDefine) +
+                              pp.Optional(portStatDefine)
                               )
-        portAttrDefine = pp.Group(PLUS + "SPECIAL" +
-                                  PLUS + "DIRECTION" + icVar.pinDir +
-                                  PLUS + "NETEXPR" + pp.delimitedList(icVar.dquotes) +
-                                  PLUS + "SUPPLYSENSITIVITY" + pinName +
-                                  PLUS + "GROUNDSENSITIVITY" + pinName +
-                                  PLUS + "USE" + pp.oneOf("SIGNAL POWER GROUND CLOCK TIEOFF ANALOG SCAN RESET") +
-                                  PLUS + "ANTENNAPINPARTIALMETALAREA"   + float + pp.Optional("LAYER" + icVar.metalName) +
-                                  PLUS + "ANTENNAPINPARTIALMETALSIDEAREA" +  float + pp.Optional("LAYER" + icVar.metalName) +
-                                  PLUS + "ANTENNAPINPARTIALCUTAREA" +  float + pp.Optional("LAYER" + icVar.metalName) +
-                                  PLUS + "ANTENNAPINDIFFAREA" + float + pp
+        portAttrDefine = pp.Group(pp.Optional(PLUS + "SPECIAL") +
+                                  pp.Optional(PLUS + "DIRECTION" + icVar.pinDir) +
+                                  pp.Optional(PLUS + "NETEXPR" + pp.delimitedList(icVar.dquotes)) +
+                                  pp.Optional(PLUS + "SUPPLYSENSITIVITY" + pinName) +
+                                  pp.Optional(PLUS + "GROUNDSENSITIVITY" + pinName) +
+                                  pp.Optional(PLUS + "USE" + icVar.pinUse) +
+                                  pp.ZeroOrMore(PLUS + "ANTENNAPINPARTIALMETALAREA"   + icVar.floatNum + pp.Optional("LAYER" + icVar.metalName)) +
+                                  pp.ZeroOrMore(PLUS + "ANTENNAPINPARTIALMETALSIDEAREA" +  icVar.floatNum + pp.Optional("LAYER" + icVar.metalName)) +
+                                  pp.ZeroOrMore(PLUS + "ANTENNAPINPARTIALCUTAREA" +  icVar.floatNum + pp.Optional("LAYER" + icVar.metalName)) +
+                                  pp.ZeroOrMore(PLUS + "ANTENNAPINDIFFAREA" + icVar.floatNum + pp.Optional("LAYER" + icVar.layerName )) +
+                                  pp.ZeroOrMore(PLUS + "ANTENNAMODEL" + pp.oneOf("OXIDE1 OXIDE2 OXIDE3 OXIDE4")) +
+                                  pp.ZeroOrMore(PLUS + "ANTENNAPINGATEAREA"  +   icVar.floatNum + pp.Optional("LAYER" + icVar.layerName)) +
+                                  pp.ZeroOrMore(PLUS + "ANTENNAPINMAXAREACAR"  +  icVar.floatNum + pp.Optional("LAYER" + icVar.layerName)) +
+                                  pp.ZeroOrMore(PLUS + "ANTENNAPINMAXCUTCAR" + icVar.floatNum + pp.Optional("LAYER" + icVar.layerName))
                                   )
+
+        pinDefine = pp.Group(icVar.DASH + icVar.hierName + PLUS + "NET" + icVar.hierName +
+                             portAttrDefine +
+                             portDefine
+                             )
+        pinSection = pp.Group("PINS" + icVar.intNum + icVar.SEMICOLON +
+                              pp.ZeroOrMore(pinDefine) +
+                              "END PINS"
+                              )
+        pinQuota = pp.delimitedList(icVar.pinQuota)
         rpt_file = self.def_file
         # print rpt_file
         if os.path.isfile(rpt_file):
@@ -160,8 +174,8 @@ class parse_def():
             #print rpt_string
             #rst = rows.searchString(rpt_string)
             #rst = tracks.searchString(rpt_string)
-            rst = viaSect.searchString(rpt_string)
-            print len(rst) , rst
+            #rst = viaSect.searchString(rpt_string)
+            #print len(rst) , rst
             #rst = ndrLayer.searchString(rpt_string)
             #rst = ndrDefine.searchString(rpt_string)
             #rst = ndrSect.searchString(rpt_string)
@@ -170,5 +184,13 @@ class parse_def():
             #rst  = regionSect.searchString(rpt_string)
             #rst = compDefine.searchString(rpt_string)
             #rst = compSect.searchString(rpt_string)
-            print len(rst) , rst
+
+            #rst =  portLayerDefine.searchString(rpt_string)
+            #rst = portPolygonDefine.searchString(rpt_string)
+            #rst = portViaDefine.searchString(rpt_string)
+            #rst = portStatDefine.searchString(rpt_string)
+            #rst = portDefine.searchString(rpt_string)
+            #rst = portAttrDefine.searchString(rpt_string)
+            rst = pinQuota.searchString(rpt_string)
+            return rst
 
