@@ -18,7 +18,7 @@ def main():
     testFtRpt()
 
 def testDef():
-    def_file = r'D:/AMD/parser_case/Place.def'
+    def_file = r'C:/parser_case/Place.def'
     def_fp = p_def.parse_def(def_file)
     #print "start time", datetime.datetime.now()
     print def_fp.read_def()
@@ -35,6 +35,7 @@ def testFtRpt():
     ##regression pt unconstraint report
     rpt_file = "/home/yaguo/ariel/df_tcdxd_t_16.ft.tt0p9v.rpt"
     rpt_file = "/home/yaguo/ariel/df_cs_umc_t_8.ft.nlc.tt0p9v.rpt"
+    rpt_file = r'C:/parser_case/df_cs_umc_t_8.ft.nlc.tt0p9v.rpt'
     # rpt_file = "/proj/ariel_pd_vol38/yaguo/df_tcdx_t16/main/pd/tiles/df_tcdxd_t_16_r1_buf_test3_1_TileBuilder_Apr10_2238_13535_GUI/df_tcdxd_t_16.ft.tt0p9v.rpt.small"
     # print "start time", datetime.datetime.now()
     p_pt_rpt = rpt.ptRpt(rpt_file)

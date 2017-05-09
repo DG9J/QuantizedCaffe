@@ -115,27 +115,17 @@ class ptRpt():
                 rpt_string  = gzipfile.read()
             else:
                 section = ''
-                path_end = re.compile("^slack ")
+                path_end = re.compile(r'slack ')
                 for line in fi.input(rpt_file):
-
-                    if path_end.match(line):
-                        result = input_delay.searchString(section)
-                        if len(result) < 1 :
-                            print section
-                            return
-                            #print section
-                        else:
-                            print "match", fi.filelineno() , result, section
-                            section = ''
+                    match = path_end.search(line)
+                    if match:
+                        #print "match :" ,line
+                        input_delay_result = input_delay.searchString(section)
+                        data_arr_result = data_arr_pat.searchString(section)
+                        print fi.filelineno(),input_delay_result[0][0][1],data_arr_result[0][0][1]
+                        section = ""
                     else:
                         section = section + line
-                        if fi.filelineno() == 85 :
-                            print section
-                            return
-                #file  = open(rpt_file,"r")
-                #rpt_string = file.read()
-
-
             #print  len(rpt_string)
             #result = sp_pat.searchString(rpt_string)
             #result = ep_pat.searchString(rpt_string)
