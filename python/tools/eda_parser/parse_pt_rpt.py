@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/tool/pandora64/bin/python
 import sys
 import os
 import shutil
@@ -115,15 +115,23 @@ class ptRpt():
                 rpt_string  = gzipfile.read()
             else:
                 section = ''
+                path_end = re.compile("^slack ")
                 for line in fi.input(rpt_file):
-                    result = pt_path_pat()
-                    if len(result) < 1 :
-                        section = section + line.rstrip()
-                        print section
-                    else:
-                        section = ''
-                        print "match", fi.filelineno()
 
+                    if path_end.match(line):
+                        result = input_delay.searchString(section)
+                        if len(result) < 1 :
+                            print section
+                            return
+                            #print section
+                        else:
+                            print "match", fi.filelineno() , result, section
+                            section = ''
+                    else:
+                        section = section + line
+                        if fi.filelineno() == 85 :
+                            print section
+                            return
                 #file  = open(rpt_file,"r")
                 #rpt_string = file.read()
 

@@ -43,6 +43,7 @@ def testFtRpt():
     # print p_pt_rpt.startpoint[0], p_pt_rpt.endpoint[0] , p_pt_rpt.arrive_time[0]
 
 
+
 def testQor():
     #regression icc qor parsing
     basRunDir = "/proj/ariel_pd_vol38/yaguo/df_tcdx_t16/main/pd/tiles/"
