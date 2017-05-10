@@ -109,23 +109,57 @@ class ptRpt():
         )
         rpt_file = self.pt_rpt_file
         print rpt_file
+
         if os.path.isfile(rpt_file):
+            pt_path_list = []
             if rpt_file.split(".")[-1] == "gz":
                 gzipfile = gzip.open(rpt_file,'r')
                 rpt_string  = gzipfile.read()
             else:
-                section = ''
+                pt_path = ''
                 path_end = re.compile(r'slack ')
                 for line in fi.input(rpt_file):
                     match = path_end.search(line)
                     if match:
                         #print "match :" ,line
-                        input_delay_result = input_delay.searchString(section)
-                        data_arr_result = data_arr_pat.searchString(section)
-                        print fi.filelineno(),input_delay_result[0][0][1],data_arr_result[0][0][1]
-                        section = ""
+                        pt_path_list.append(pt_path)
+                        pt_path = ""
                     else:
-                        section = section + line
+                        pt_path = pt_path + line
+                print "complete read the", rpt_file
+            data_delay_list = []
+            data_delay_file = "./data_value.list"
+            fp = open(data_delay_file,'w')
+            i = 0
+            MP = 0
+
+            while i < len(pt_path_list):
+                pt_path = pt_path_list[i]
+                #print i
+                if MP == 0:
+                    input_delay_result = input_delay.searchString(pt_path)
+                    data_arr_result = data_arr_pat.searchString(pt_path)
+                    #print input_delay_result[0][0][1],data_arr_result[0][0][1]
+                    input_delay_value = float(input_delay_result[0][0][1])
+                    data_arr_value = float(data_arr_result[0][0][1])
+                    data_delay = int((data_arr_value - input_delay_value)/685 * 100)
+                    data_delay_list.append(data_delay)
+                    fp.write(str(data_delay))
+                    i = i + 1
+                else:
+                    def match_pattern(pattern, target_string):
+                        input_delay_result = pattern.searchString(target_string)
+
+
+
+            print "finish read path list:"
+            #fp.write(data_delay_list)
+            fp.close()
+            print data_delay_list
+            return data_delay_list
+                #print data_delay
+
+
             #print  len(rpt_string)
             #result = sp_pat.searchString(rpt_string)
             #result = ep_pat.searchString(rpt_string)
@@ -210,7 +244,7 @@ class ptRpt():
         pinName     = icVar.hierName
         clkName     = icVar.hierName
         moduleName  = icVar.flatName        
-        clockName     =  icVar.hierName
+        clockName   = icVar.hierName
         
         sp_pat          = pp.Group("Startpoint" + icVar.COLON + instName + pp.delimitedList(icVar.paras) )
         ep_pat          = pp.Group("Endpoint" + icVar.COLON + instName + pp.delimitedList(icVar.paras) )
