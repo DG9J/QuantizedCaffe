@@ -16,11 +16,11 @@ import string
 
 
 def main():
-    #testDef()
+    testDef()
     #plotList()
     #testFtRpt()
     #MPtestFtRpt()
-    rptFile = r'C:/parser_case/df_chan_ccx.ft.1w2s_l.tt0p9v.delay.csv'
+    #rptFile = r'C:/parser_case/df_chan_ccx.ft.1w2s_l.tt0p9v.delay.csv'
     #rptFile = r'C:/parser_case/df_chan_ccx.ft.1w2s_wh.tt0p9v.delay.csv'
     #rptFile = r'C:/parser_case/df_chan_ccx.ft.2w2s_l.tt0p9v.delay.csv'
     #rptFile = r'C:/parser_case/df_chan_ccx.ft.2w2s_h.tt0p9v.delay.csv'
@@ -28,10 +28,12 @@ def main():
 
 
 def testDef():
-    def_file = r'C:/parser_case/Place.def'
-    def_fp = p_def.parse_def(def_file)
+
+    defFile = r'C:/parser_case/Place.def'
+    print "testing ", defFile
+    defFp = p_def.parse_def(defFile)
     #print "start time", datetime.datetime.now()
-    print def_fp.read_def()
+    print defFp.defPin()
     #print "start time", datetime.datetime.now()
 
 def testPtRpt():
