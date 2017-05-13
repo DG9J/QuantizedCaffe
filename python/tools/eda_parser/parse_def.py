@@ -106,6 +106,7 @@ class parse_def():
 
         ##pin section
     def defPin(self):
+        print "reading PIN SECTION"
         portLayerDefine = pp.Group(icVar.PLUS + "LAYER" + icVar.layerName +
                                   pp.Optional("MASK" + icVar.intNum) +
                                   pp.Optional("SPACING" + icVar.intNum) +
@@ -148,19 +149,19 @@ class parse_def():
         pinDefine = pp.Group(icVar.DASH + icVar.hierName + icVar.PLUS + "NET" + icVar.hierName +
                              portAttrDefine +
                              portDefine)
-        pinSection = pp.Group("PINS" + icVar.intNum + icVar.SEMICOLON +
-                              pp.ZeroOrMore(pinDefine) +
-                              "END PINS")
+        #pinSection = pp.Group("PINS" + icVar.intNum + icVar.SEMICOLON +
+        #                     pp.ZeroOrMore(pinDefine) +
+        #                     "END PINS")
         defFile = fi.FileInput(self.defFile, openhook=fi.hook_compressed)
         for line0 in defFile:
             if line0.find('PINS') == 0:
                 pinSect = []
                 for line1 in defFile:
                     if line1.find('END PINS') == 0:
-
                         str1 = ''.join(pinSect)
                         #print line1, str1
                         result = pinDefine.searchString(str1)
+                        print str1
                         break
                     else:
                         pinSect.append(line1)

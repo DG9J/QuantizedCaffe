@@ -24,7 +24,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "csv_file",
-    help="Output the csv file."W
+    help="Output the csv file."
 )
 args = parser.parse_args()
 def flatten(the_list,new_list):
