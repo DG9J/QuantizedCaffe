@@ -7,6 +7,8 @@ import pyparsing as pp
 import icComVar as icVar
 import fileinput as fi
 import numpy as np
+from multiprocessing import Pool
+from multiprocessing import process
 
 class parse_def():
     def __init__(self, defFile):
@@ -25,7 +27,7 @@ class parse_def():
         history         =  pp.Group("HISTORY" + icVar.hierName + icVar.SEMICOLON)
         property        =  pp.Group("PROPERTYDEFINITIONS" + icVar.objectType + icVar.hierName + icVar.propType + icVar.hierName + "END PROPERTYDEFINITIONS ")
         die_area        =  pp.Group("DIEAREA" + icVar.polygon + icVar.SEMICOLON)
-        compMaskShift   =  pp.Group(pp.oneOf("COMPONENTMASKSHIFT ") + pp.OneOrMore(icVar.layerName))
+        compMaskShift   =  pp.Group("COMPONENTMASKSHIFT " + pp.OneOrMore(icVar.layerName))
         maskShift       =  pp.Group("MASKSHIFT" + icVar.intNum)
 
         #COMMON
@@ -89,7 +91,7 @@ class parse_def():
         regionSect  = pp.Group("REGIONS" + icVar.intNum + icVar.SEMICOLON + pp.OneOrMore(regionDefine) + "END REGIONS")
     def defComp(self):
         # COMPONENTS
-        cellLoc  = pp.Group(icVar.PLUS + pp.oneOf("FIXED COVER PLACED UNPLACED") + pp.Optional(icVar.orig)  + pp.Optional(icVar.orient) )
+        cellLoc  = pp.Group(icVar.PLUS + icVar.placeStatus + pp.Optional(icVar.orig)  + pp.Optional(icVar.orient) )
         compDefine = pp.Group(icVar.DASH + icVar.hierName + icVar.hierName +
                               pp.Optional(icVar.PLUS + "EEQMASTER" + icVar.hierName) +
                               pp.Optional(icVar.PLUS + "SOURCE" + pp.oneOf("NETLIST DIST USER TIMING")) +
@@ -104,7 +106,14 @@ class parse_def():
                               )
         compSect = pp.Group("COMPONENTS" + icVar.intNum  + icVar.SEMICOLON + pp.OneOrMore(compDefine) + "END COMPONENTS")
 
-        ##pin section
+    def get_values(self,lVals):
+        for val in lVals:
+            if isinstance(val,list):
+                self.get_values(val)
+            else:
+                #print "list element",len(val),type(val),val
+                self.result.append(val)
+    ##pin section
     def defPin(self):
         print "reading PIN SECTION"
         portLayerDefine = pp.Group(icVar.PLUS + "LAYER" + icVar.layerName +
@@ -122,9 +131,9 @@ class parse_def():
                                  pp.Optional("MASK" + icVar.intNum) +
                                  icVar.orig
                                  )
-        portStatDefine = pp.Group(pp.oneOf("COVER PLACED FIXED") + icVar.orig + icVar.orient)
+        portStatDefine = pp.Group(icVar.placeStatus + icVar.orig + icVar.orient)
 
-        portDefine = pp.Group(icVar.PLUS + "PORT" +
+        portDefine = pp.Group(pp.Optional(icVar.PLUS + "PORT") +
                               pp.Optional(portLayerDefine) +
                               pp.Optional(portPolygonDefine) +
                               pp.Optional(portViaDefine) +
@@ -136,19 +145,19 @@ class parse_def():
                                   pp.Optional(icVar.PLUS + "SUPPLYSENSITIVITY" + icVar.hierName) +
                                   pp.Optional(icVar.PLUS + "GROUNDSENSITIVITY" + icVar.hierName) +
                                   pp.Optional(icVar.PLUS + "USE" + icVar.pinUse) +
-                                  pp.ZeroOrMore(icVar.PLUS + "ANTENNAPINPARTIALMETALAREA"   + icVar.floatNum + pp.Optional("LAYER" + icVar.metalName)) +
-                                  pp.ZeroOrMore(icVar.PLUS + "ANTENNAPINPARTIALMETALSIDEAREA" +  icVar.floatNum + pp.Optional("LAYER" + icVar.metalName)) +
-                                  pp.ZeroOrMore(icVar.PLUS + "ANTENNAPINPARTIALCUTAREA" +  icVar.floatNum + pp.Optional("LAYER" + icVar.metalName)) +
+                                  pp.ZeroOrMore(icVar.PLUS + "ANTENNAPINPARTIALMETALAREA"   + icVar.floatNum + pp.Optional("LAYER" + icVar.layerName)) +
+                                  pp.ZeroOrMore(icVar.PLUS + "ANTENNAPINPARTIALMETALSIDEAREA" +  icVar.floatNum + pp.Optional("LAYER" + icVar.layerName)) +
+                                  pp.ZeroOrMore(icVar.PLUS + "ANTENNAPINPARTIALCUTAREA" +  icVar.floatNum + pp.Optional("LAYER" + icVar.layerName)) +
                                   pp.ZeroOrMore(icVar.PLUS + "ANTENNAPINDIFFAREA" + icVar.floatNum + pp.Optional("LAYER" + icVar.layerName )) +
-                                  pp.ZeroOrMore(icVar.PLUS + "ANTENNAMODEL" + pp.oneOf("OXIDE1 OXIDE2 OXIDE3 OXIDE4")) +
+                                  pp.ZeroOrMore(icVar.PLUS + "ANTENNAMODEL" + icVar.oxide) +
                                   pp.ZeroOrMore(icVar.PLUS + "ANTENNAPINGATEAREA"  +   icVar.floatNum + pp.Optional("LAYER" + icVar.layerName)) +
                                   pp.ZeroOrMore(icVar.PLUS + "ANTENNAPINMAXAREACAR"  +  icVar.floatNum + pp.Optional("LAYER" + icVar.layerName)) +
                                   pp.ZeroOrMore(icVar.PLUS + "ANTENNAPINMAXCUTCAR" + icVar.floatNum + pp.Optional("LAYER" + icVar.layerName))
                                   )
-
         pinDefine = pp.Group(icVar.DASH + icVar.hierName + icVar.PLUS + "NET" + icVar.hierName +
                              portAttrDefine +
-                             portDefine)
+                             pp.ZeroOrMore(portDefine)
+                             )
         #pinSection = pp.Group("PINS" + icVar.intNum + icVar.SEMICOLON +
         #                     pp.ZeroOrMore(pinDefine) +
         #                     "END PINS")
@@ -156,18 +165,40 @@ class parse_def():
         for line0 in defFile:
             if line0.find('PINS') == 0:
                 pinSect = []
+                singlePin = []
                 for line1 in defFile:
                     if line1.find('END PINS') == 0:
                         str1 = ''.join(pinSect)
-                        #print line1, str1
-                        result = pinDefine.searchString(str1)
-                        print str1
+                        #result = pinDefine.searchString(str1)
+                        #print str1
                         break
                     else:
-                        pinSect.append(line1)
+                        if line1.find(';') > -1:
+                            singlePin.append(line1)
+                            singlePinString =''.join(singlePin)
+                            pinSect.append(singlePinString)
+                            #result = portDefine.searchString(singlePinString).asList()
+                            #result = portAttrDefine.searchString(singlePinString)
+                            #result = portLayerDefine.searchString(singlePinString)
+                            #result = portViaDefine.searchString(singlePinString)
+                            #result = portPolygonDefine.searchString(singlePinString)
+                            #result = portStatDefine.searchString(singlePinString)
+                            result = pinDefine.searchString(singlePinString)
+                            #print "single pin:\n",singlePinString
+                            self.result = []
+                            self.get_values(result)
+                            #print "pin:",len(singlePinString),type(result),self.result
+                            print self.result
+
+                            #print singlePinString
+                            singlePin = []
+                        else:
+                            singlePin.append(line1)
+
             #else:
             #    print "finished", line0.strip()
         #print "complete read the", rpt_file
+
         return result
 
         #self.designName = designName.searchString(rpt_string)
@@ -194,3 +225,11 @@ class parse_def():
         #rst = pinQuota.searchString(rpt_string)
         #return rst
 
+    def pattern_match(name, pattern, target_string):
+        # print('Run task %s (%s)...' % (name, os.getpid()))
+        # start = time.time()
+        input_delay_result = pattern.searchString(target_string)
+        # end = time.time()
+        # print('Task %s runs %0.2f seconds.' % (name, (end - start)))
+        # print name, input_delay_result
+        return input_delay_result[0][0][1]
