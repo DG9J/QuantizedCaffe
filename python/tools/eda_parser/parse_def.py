@@ -139,36 +139,23 @@ class parse_def():
                               pp.Optional(portViaDefine) +
                               pp.Optional(portStatDefine)
                               )
-        portAttrDefine = pp.Group(pp.Optional(icVar.PLUS + "SPECIAL") +
-                                  pp.Optional(icVar.PLUS + "DIRECTION" + icVar.pinDir) +
-                                  pp.Optional(icVar.PLUS + "NETEXPR" + pp.delimitedList(icVar.dquotes)) +
-                                  pp.Optional(icVar.PLUS + "SUPPLYSENSITIVITY" + icVar.hierName) +
-                                  pp.Optional(icVar.PLUS + "GROUNDSENSITIVITY" + icVar.hierName) +
-                                  pp.Optional(icVar.PLUS + "USE" + icVar.pinUse) +
-                                  pp.ZeroOrMore(icVar.PLUS + "ANTENNAPINPARTIALMETALAREA"   + icVar.floatNum + pp.Optional("LAYER" + icVar.layerName)) +
-                                  pp.ZeroOrMore(icVar.PLUS + "ANTENNAPINPARTIALMETALSIDEAREA" +  icVar.floatNum + pp.Optional("LAYER" + icVar.layerName)) +
-                                  pp.ZeroOrMore(icVar.PLUS + "ANTENNAPINPARTIALCUTAREA" +  icVar.floatNum + pp.Optional("LAYER" + icVar.layerName)) +
-                                  pp.ZeroOrMore(icVar.PLUS + "ANTENNAPINDIFFAREA" + icVar.floatNum + pp.Optional("LAYER" + icVar.layerName )) +
-                                  pp.ZeroOrMore(icVar.PLUS + "ANTENNAMODEL" + icVar.oxide) +
-                                  pp.ZeroOrMore(icVar.PLUS + "ANTENNAPINGATEAREA"  +   icVar.floatNum + pp.Optional("LAYER" + icVar.layerName)) +
-                                  pp.ZeroOrMore(icVar.PLUS + "ANTENNAPINMAXAREACAR"  +  icVar.floatNum + pp.Optional("LAYER" + icVar.layerName)) +
-                                  pp.ZeroOrMore(icVar.PLUS + "ANTENNAPINMAXCUTCAR" + icVar.floatNum + pp.Optional("LAYER" + icVar.layerName))
+        pinAttr        = pp.Group(icVar.PLUS + icVar.pinAttr + pp.Optional(icVar.hierName))
+        portAttrDefine = pp.Group(icVar.PLUS + "NET" + icVar.hierName +
+                                  pp.ZeroOrMore(pinAttr)
                                   )
-        pinDefine = pp.Group(icVar.DASH + icVar.hierName + icVar.PLUS + "NET" + icVar.hierName +
+
+        pinDefine = pp.Group(icVar.DASH + icVar.hierName +
                              portAttrDefine +
-                             pp.ZeroOrMore(portDefine)
+                             pp.Optional(portDefine)
                              )
-        #pinSection = pp.Group("PINS" + icVar.intNum + icVar.SEMICOLON +
-        #                     pp.ZeroOrMore(pinDefine) +
-        #                     "END PINS")
         defFile = fi.FileInput(self.defFile, openhook=fi.hook_compressed)
         for line0 in defFile:
             if line0.find('PINS') == 0:
-                pinSect = []
+                allPin = []
                 singlePin = []
                 for line1 in defFile:
                     if line1.find('END PINS') == 0:
-                        str1 = ''.join(pinSect)
+                        str1 = ''.join(allPin)
                         #result = pinDefine.searchString(str1)
                         #print str1
                         break
@@ -176,30 +163,25 @@ class parse_def():
                         if line1.find(';') > -1:
                             singlePin.append(line1)
                             singlePinString =''.join(singlePin)
-                            pinSect.append(singlePinString)
-                            #result = portDefine.searchString(singlePinString).asList()
-                            #result = portAttrDefine.searchString(singlePinString)
-                            #result = portLayerDefine.searchString(singlePinString)
-                            #result = portViaDefine.searchString(singlePinString)
-                            #result = portPolygonDefine.searchString(singlePinString)
-                            #result = portStatDefine.searchString(singlePinString)
-                            result = pinDefine.searchString(singlePinString)
-                            #print "single pin:\n",singlePinString
-                            self.result = []
-                            self.get_values(result)
+                            allPin.append(singlePinString)
+                            #result = self.pattern_match(pinDefine,singlePinString)
+                            #self.result = []
+                            #self.get_values(result)
                             #print "pin:",len(singlePinString),type(result),self.result
-                            print self.result
-
+                            #print defFile.lineno(),self.result
                             #print singlePinString
                             singlePin = []
                         else:
                             singlePin.append(line1)
-
+                results = self.MP_pattern_match(pinDefine,allPin)
+                #output = [pt.get() for pt in results]
+                print type(results),len(results)
+                for pt in results:
+                    print type(pt)
             #else:
             #    print "finished", line0.strip()
         #print "complete read the", rpt_file
-
-        return result
+        return results
 
         #self.designName = designName.searchString(rpt_string)
         #print rpt_string
@@ -224,12 +206,18 @@ class parse_def():
         #rst = portAttrDefine.searchString(rpt_string)
         #rst = pinQuota.searchString(rpt_string)
         #return rst
-
-    def pattern_match(name, pattern, target_string):
-        # print('Run task %s (%s)...' % (name, os.getpid()))
-        # start = time.time()
-        input_delay_result = pattern.searchString(target_string)
-        # end = time.time()
-        # print('Task %s runs %0.2f seconds.' % (name, (end - start)))
-        # print name, input_delay_result
-        return input_delay_result[0][0][1]
+    def pattern_match(self,pattern,target_string):
+        #print "pattern:", pattern
+        #print "target:", target_string
+        result = pattern.searchString(target_string).asList()
+        #print "result:", result
+        return result
+    def MP_pattern_match(self,pattern,target_list):
+        #print('Run task %s (%s)...' % (name, os.getpid()))
+        #start = time.time()
+        p = Pool(4)
+        results = [p.apply_async(self.pattern_match, args=(pattern, target_list[i])) for i in range(1, len(target_list))]
+        #end = time.time()
+        #print('Task %s runs %0.2f seconds.' % (name, (end - start)))
+        #print
+        return results

@@ -33,7 +33,7 @@ def testDef():
     print "testing ", defFile
     defFp = p_def.parse_def(defFile)
     #print "start time", datetime.datetime.now()
-    print defFp.defPin()
+    defFp.defPin()
     #print "start time", datetime.datetime.now()
 
 def testPtRpt():
