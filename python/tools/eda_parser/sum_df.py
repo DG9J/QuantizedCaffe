@@ -15,82 +15,85 @@ def main():
     spg_def_gv_check()
 
 def copy_tile_def():
-    Files1 = glob.glob('/proj/unb_scratch_6/ariel/04092017_tcdx/main/pd/tiles/df_*_DEF/data/Synthesize.placed.def.gz')
-    Files2 = glob.glob('/proj/ariel_pd_vol97/yaguo/DF_TILES/defs_NLC3/*.def.gz')
+    #Files1 = glob.glob('/proj/unb_scratch_6/ariel/04092017_tcdx/main/pd/tiles/df_*_DEF/data/Synthesize.placed.def.gz')
+    #Files2 = glob.glob('/proj/ariel_pd_vol97/yaguo/DF_TILES/defs_NLC3/*.def.gz')
+    Files1 = glob.glob('/proj/ariel_pd_vol109/05112017_noMB_NLC.5/main/pd/tiles/*DEF*_TileBuilder_May11_1424_21004_GUI/data/Synthesize.placed.def.gz')
 
     for f in Files1:
-       tileFile = f.split('/')[8]
-       regex = re.compile(r'df_\S+(df\S+)_DEF')
+       tileFile = f.split('/')[7]
+       #regex = re.compile(r'df_\S+(df\S+)_DEF')
+       regex = re.compile(r'\S+_DEF(\S+)_TileBuilder_May11_1424_21004_GUI')
        match = regex.search(tileFile)
        print tileFile
        if match:
            tileName = match.group(1)
-       tilePath = "/proj/ariel_pd_vol97/yaguo/DF_TILES/NLC/" + tileName
+       tilePath = "/proj/ariel_pd_vol97/yaguo/DF_TILES/NLC_5/" + tileName
 
        if not os.path.exists(tilePath):
            os.makedirs(tilePath)
-       new_f  = tilePath + "/Synthesize.placed.def.gz"
-       shutil.copy2(f, new_f)
-       print new_f, f
+       new_def_f  = tilePath + "/" + tileName + ".placed.def.gz"
+       shutil.copy2(f, new_def_f)
+       print new_def_f, f
 
-    for f in Files2:
-       tileFile =  f.split('/')[6]
-       regex = re.compile(r'(\S+).def.gz')
-       match = regex.search(tileFile)
-       print tileFile
-       if match:
-           tileName =  match.group(1)
-       tilePath = "/proj/ariel_pd_vol97/yaguo/DF_TILES/NLC/" + tileName
-
-       if not os.path.exists(tilePath):
-           os.makedirs(tilePath)
-       new_f = tilePath + "/Synthesze.placed.def.gz"
-       shutil.copy2(f,new_f)
-       print new_f , f
+    #for f in Files2:
+    #   tileFile =  f.split('/')[6]
+    #   regex = re.compile(r'(\S+).def.gz')
+    #   match = regex.search(tileFile)
+    #   print tileFile
+    #   if match:
+    #       tileName =  match.group(1)
+    #   tilePath = "/proj/ariel_pd_vol97/yaguo/DF_TILES/NLC/" + tileName
+    #
+    #   if not os.path.exists(tilePath):
+    #       os.makedirs(tilePath)
+    #   new_f = tilePath + "/Synthesze.placed.def.gz"
+    #   shutil.copy2(f,new_f)
+    #   print new_f , f
 
 
 
 def copy_tile_gv():
-    Files1 = glob.glob('/proj/unb_scratch_6/ariel/04092017_tcdx/main/pd/tiles/df_*_DEF/data/Synthesize.v.gz')
-    Files2 = glob.glob('/proj/unb_scratch_6/ariel/04042017_soc/main/pd/tiles/df_*ariel_preNLA_TileBuilder_Apr04_1748_22453_ariel_regression/data/Synthesize.v.gz')
-
+    #Files1 = glob.glob('/proj/unb_scratch_6/ariel/04092017_tcdx/main/pd/tiles/df_*_DEF/data/Synthesize.v.gz')
+    #Files2 = glob.glob('/proj/unb_scratch_6/ariel/04042017_soc/main/pd/tiles/df_*ariel_preNLA_TileBuilder_Apr04_1748_22453_ariel_regression/data/Synthesize.v.gz')
+    Files1 = glob.glob('/proj/ariel_pd_vol109/05112017_noMB_NLC.5/main/pd/tiles/*DEF*_TileBuilder_May11_1424_21004_GUI/data/Synthesize.v.gz')
     for f in Files1:
-        tileFile = f.split('/')[8]
-        regex = re.compile(r'df_\S+(df\S+)_DEF')
+        tileFile = f.split('/')[7]
+        #regex = re.compile(r'df_\S+(df\S+)_DEF')
+        regex = re.compile(r'\S+_DEF(\S+)_TileBuilder_May11_1424_21004_GUI')
         match = regex.search(tileFile)
         print tileFile
         if match:
             tileName = match.group(1)
-        tilePath = "/proj/ariel_pd_vol97/yaguo/DF_TILES/NLC/" + tileName
+        tilePath = "/proj/ariel_pd_vol97/yaguo/DF_TILES/NLC_5/" + tileName
 
         if not os.path.exists(tilePath):
             os.makedirs(tilePath)
-        new_f  = tilePath + "/Synthesize.v.gz"
-        shutil.copy2(f, new_f)
-        print new_f, f
-    for f in Files2:
-        tileFile =  f.split('/')[8]
-        regex = re.compile(r'(\S+)_ariel_preNLA_TileBuilder_Apr04_1748_22453_ariel_regression')
-        match = regex.search(tileFile)
-        print tileFile
-        if match:
-            tileName =  match.group(1)
-
-        tilePath = "/proj/ariel_pd_vol97/yaguo/DF_TILES/NLC/" + tileName
-
-        if not os.path.exists(tilePath):
-            os.makedirs(tilePath)
-        new_f  = tilePath + "/Synthesize.v.gz"
-        shutil.copy2(f,new_f)
-        print new_f , f
+        new_gv_f = tilePath + "/" + tileName + ".v.gz"
+        shutil.copy2(f, new_gv_f)
+        print new_gv_f, f
+    #for f in Files2:
+    #    tileFile =  f.split('/')[8]
+    #    regex = re.compile(r'(\S+)_ariel_preNLA_TileBuilder_Apr04_1748_22453_ariel_regression')
+    #    match = regex.search(tileFile)
+    #    print tileFile
+    #    if match:
+    #        tileName =  match.group(1)
+    #
+    #    tilePath = "/proj/ariel_pd_vol97/yaguo/DF_TILES/NLC/" + tileName
+    #
+    #    if not os.path.exists(tilePath):
+    #        os.makedirs(tilePath)
+    #    new_f  = tilePath + "/Synthesize.v.gz"
+    #    shutil.copy2(f,new_f)
+    #    print new_f , f
 
 def spg_def_gv_check():
-    fileDir = glob.glob('/proj/ariel_pd_vol97/yaguo/DF_TILES/NLC/*')
+    fileDir = glob.glob('/proj/ariel_pd_vol97/yaguo/DF_TILES/NLC_5/*')
 
     for d in fileDir:
         tileName = d.split('/')[6]
-        defFile = d + "/Synthesize.placed.def.gz"
-        gvFile  = d + "/Synthesize.v.gz"
+        defFile = d + "/" + tileName +".placed.def.gz"
+        gvFile  = d + "/" + tileName + ".v.gz"
         #if not os.path.exists(defFile):
         #    print "missing :" , defFile
         #if not os.path.exists(gvFile):
