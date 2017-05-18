@@ -11,6 +11,17 @@ from multiprocessing import Pool
 from multiprocessing import process
 
 class parse_def():
+    '''
+    defHeader
+    defRow
+    defTrack
+    defVia
+    defNDR
+    defRegion
+    defComp
+    defPin
+    defBkg
+    '''
     def __init__(self, defFile):
         self.defFile = defFile
         self.designName = "None"
@@ -101,7 +112,7 @@ class parse_def():
                               pp.Optional(icVar.PLUS + "ROUTEHALO" + icVar.intNum + icVar.layerName + icVar.layerName) +
                               pp.Optional(icVar.PLUS + "WEIGHT" + icVar.intNum) +
                               pp.Optional(icVar.PLUS + "REGION" + icVar.hierName) +
-                              pp.Optional(propDefine) +
+                              pp.Optional(icVar.propDefine) +
                               icVar.SEMICOLON
                               )
         compSect = pp.Group("COMPONENTS" + icVar.intNum  + icVar.SEMICOLON + pp.OneOrMore(compDefine) + "END COMPONENTS")
@@ -183,29 +194,59 @@ class parse_def():
         #print "complete read the", rpt_file
         return results
 
-        #self.designName = designName.searchString(rpt_string)
-        #print rpt_string
-        #rst = rows.searchString(rpt_string)
-        #rst = tracks.searchString(rpt_string)
-        #rst = viaSect.searchString(rpt_string)
-        #print len(rst) , rst
-        #rst = ndrLayer.searchString(rpt_string)
-        #rst = ndrDefine.searchString(rpt_string)
-        #rst = ndrSect.searchString(rpt_string)
-        #self.viaSect = viaSect.searchString(rpt_string)
-        #rst = regionDefine.searchString(rpt_string)
-        #rst  = regionSect.searchString(rpt_string)
-        #rst = compDefine.searchString(rpt_string)
-        #rst = compSect.searchString(rpt_string)
 
-        #rst =  portLayerDefine.searchString(rpt_string)
-        #rst = portPolygonDefine.searchString(rpt_string)
-        #rst = portViaDefine.searchString(rpt_string)
-        #rst = portStatDefine.searchString(rpt_string)
-        #rst = portDefine.searchString(rpt_string)
-        #rst = portAttrDefine.searchString(rpt_string)
-        #rst = pinQuota.searchString(rpt_string)
-        #return rst
+    def defBkg(self):
+        #blockage
+        layerBkg = pp.Group(icVar.DASH + "LAYER" + icVar.layerName +
+                            pp.Optional(icVar.routeBkgAttr + pp.Optional(icVar.hierName)) +
+                            pp.OneOrMore(pp.oneOf("RECT POLYGON") + icVar.polygon) +
+                            icVar.SEMICOLON
+                            )
+        cellBkg  = pp.Group(icVar.DASH + "PLACEMENT" +
+                            pp.Optional(icVar.cellBkgAttr + pp.Optional(icVar.hierName)) +
+                            pp.OneOrMore("RECT" + icVar.polygon) +
+                            icVar.SEMICOLON
+                            )
+        bkgSect = pp.Group( "BLOCKAGES" + icVar.intNum +
+                            pp.ZeroOrMore(layerBkg) +
+                            pp.ZeroOrMore(cellBkg)
+                           )
+
+        defFile = fi.FileInput(self.defFile, openhook=fi.hook_compressed)
+        for line0 in defFile:
+            if line0.find('BLOCKAGES') == 0:
+                allPin = []
+                singlePin = []
+                for line1 in defFile:
+                    if line1.find('END BLOCKAGES') == 0:
+                        str1 = ''.join(allPin)
+                        # result = pinDefine.searchString(str1)
+                        # print str1
+                        break
+                    else:
+                        if line1.find(';') > -1:
+                            singlePin.append(line1)
+                            singlePinString = ''.join(singlePin)
+                            allPin.append(singlePinString)
+                            # result = self.pattern_match(pinDefine,singlePinString)
+                            # self.result = []
+                            # self.get_values(result)
+                            # print "pin:",len(singlePinString),type(result),self.result
+                            # print defFile.lineno(),self.result
+                            # print singlePinString
+                            singlePin = []
+                        else:
+                            singlePin.append(line1)
+                results = self.MP_pattern_match(cellBkg, allPin)
+                # output = [pt.get() for pt in results]
+                print type(results), len(results)
+                for pt in results:
+                    print type(pt)
+                    # else:
+                    #    print "finished", line0.strip()
+        # print "complete read the", rpt_file
+        return results
+
     def pattern_match(self,pattern,target_string):
         #print "pattern:", pattern
         #print "target:", target_string

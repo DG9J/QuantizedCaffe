@@ -10,8 +10,6 @@ import numpy as np
 import json
 
 
-
-
 def long_time_task(name,pattern,target_string):
     #print('Run task %s (%s)...' % (name, os.getpid()))
     #start = time.time()
@@ -20,6 +18,42 @@ def long_time_task(name,pattern,target_string):
     #print('Task %s runs %0.2f seconds.' % (name, (end - start)))
     #print name, input_delay_result
     return input_delay_result[0][0][1]
+
+def plotList(data_list):
+
+    #title = "honrizontal tt0p9v 100um"
+    title = "vertical tt0p65v 100um"
+    delay_list =   np.array(data_list).astype(np.float)
+
+    print delay_list.max(),delay_list.min(),delay_list.mean()
+    #print delay_list
+
+    bin_min = int(delay_list.min()) - 1
+    bin_max = int(delay_list.max()) + 1
+    bins = range(bin_min,bin_max,2)
+
+    hist ,bins  = np.histogram(delay_list, bins=bins)
+
+    gaussian_numbers = np.asarray(delay_list)
+    #plt.hist(gaussian_numbers)
+    delay_avg = float("{0:.2f}".format(delay_list.mean()))
+    delay_max = float("{0:.2f}".format(delay_list.max()))
+    delay_min = float("{0:.2f}".format(delay_list.min()))
+    xlabel = "Delay(avg="+ str(delay_avg)+"max=" + str(delay_max) + "min=" + str(delay_min)+")"
+    ylable = "Count (total=" + str(len(delay_list))+ ")"
+    plt.title(title)
+    plt.xlabel(xlabel)
+
+    plt.ylabel(ylable)
+    #fig = plt.gcf()
+    #plot_url = py.plot_mpl(fig, filename='mpl-basic-histogram')
+    #plt.plot(delay_list,norm.pdf(delay_list,0.4))
+    #width = 0.7*(bins[1]-bins[0])
+    #center = delay_list.mean()
+    #plt.bar(center, hist, align = 'center', width = width)
+    plt.bar(bins[:-1],hist,width=2)
+    plt.show()
+
 
 if __name__=='__main__':
     rpt_file = r'C:/parser_case/df_cs_umc_t_8.ft.nlc.tt0p65v.rpt'
@@ -66,3 +100,11 @@ if __name__=='__main__':
         with open('rpt.json','w') as fp:
             json.dump(output,fp)
         fp.close()
+
+        with open('rpt.json','r') as fp:
+            output = json.load(fp)
+
+
+        #print('All subprocesses done.')
+        #print len(pt_path_list)
+        plotList(output)

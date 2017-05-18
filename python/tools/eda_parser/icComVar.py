@@ -43,16 +43,17 @@ pathGroup   = pp.Word(pp.alphanums + '\*' + '_' + "'")
 scenarioName= pp.Word(pp.alphanums + "_" + "'")
 
 #DEF varible
-orient       = pp.Word('N' + 'E' + 'W' + 'S' + 'FN' + 'FE' + 'FW' + 'FS')
-routeDir     = pp.Word('X' + 'Y')
-placeStatus  = pp.Word('PLACED' + "FIXED" + "COVER" + "UNPLACED")
-oxide        = pp.Word("OXIDE1" + "OXIDE2" + "OXIDE3" + "OXIDE4")
-pinDir       = pp.Word('INPUT' + "OUTPUT" + "INOUT")
-pinUse       = pp.Word("SIGNAL"+ "POWER" + "GROUND" + "CLOCK" + "TIEOFF" + "ANALOG" + "SCAN" + "RESET")
-propType     = pp.Word('INTERGER' + 'REAL' + 'STRING')
-objectType   = pp.Word("DESIGN" + "COMPONENT" + "NET" + "SPECIALNET" + "GROUP" + "ROW" + "COMPONENT" + "REGION")
-pinQuota     = pp.QuotedString('PINS',endQuoteChar="END PINS")
-pinAttr     = pp.oneOf("SPECIA DIRECTION  NETEXPR SUPPLYSENSITIVITY GROUNDSENSITIVITY USE ANTENNAPINMAXAREACAR ANTENNAPINMAXCUTCAR ANTENNAPINDIFFAREA ANTENNAMODEL ANTENNAPINGATEAREA ANTENNAPINPARTIALMETALAREA ANTENNAPINPARTIALMETALAREA ANTENNAPINPARTIALCUTAREA")
+orient          = pp.oneOf('N' + 'E' + 'W' + 'S' + 'FN' + 'FE' + 'FW' + 'FS')
+routeDir        = pp.oneOf('X' + 'Y')
+placeStatus     = pp.oneOf('PLACED' + "FIXED" + "COVER" + "UNPLACED")
+oxide           = pp.oneOf("OXIDE1" + "OXIDE2" + "OXIDE3" + "OXIDE4")
+pinDir          = pp.oneOf('INPUT' + "OUTPUT" + "INOUT")
+pinUse          = pp.oneOf("SIGNAL"+ "POWER" + "GROUND" + "CLOCK" + "TIEOFF" + "ANALOG" + "SCAN" + "RESET")
+propType        = pp.oneOf('INTERGER' + 'REAL' + 'STRING')
+objectType      = pp.oneOf("DESIGN" + "COMPONENT" + "NET" + "SPECIALNET" + "GROUP" + "ROW" + "COMPONENT" + "REGION")
+pinAttr         = pp.oneOf("SPECIA DIRECTION  NETEXPR SUPPLYSENSITIVITY GROUNDSENSITIVITY USE ANTENNAPINMAXAREACAR ANTENNAPINMAXCUTCAR ANTENNAPINDIFFAREA ANTENNAMODEL ANTENNAPINGATEAREA ANTENNAPINPARTIALMETALAREA ANTENNAPINPARTIALMETALAREA ANTENNAPINPARTIALCUTAREA")
+routeBkgAttr    = pp.oneOf("SLOTS FILLS PUSHDOWN EXCEPTPGNET COMPONENT SPACING DESIGNRULEWIDTH MASK")
+cellBkgAttr     = pp.oneOf("SOFT PARTIAL COMPONENT PUSHDOWN")
 
 # polygon
 origX        = pp.Word(pp.nums + "*" + "-")
@@ -62,10 +63,10 @@ rectangle    = pp.Group(orig + orig)
 polygon      = pp.Group(orig + pp.OneOrMore(orig))
 
 # Process Varible
-layerName    = pp.Word('M0' + 'M1' + 'M2' + 'M3' + 'M4' + 'M5' + 'M6' + 'M7' + 'M8' + 'M10' + 'M11' + 'M12' +
+layerName    = pp.oneOf('M0' + 'M1' + 'M2' + 'M3' + 'M4' + 'M5' + 'M6' + 'M7' + 'M8' + 'M10' + 'M11' + 'M12' +
                       'VIA0' + 'VIA1' + 'VIA2' + 'VIA3' + 'VIA4' + 'VIA5' + 'VIA6' + 'VIA7' + 'VIA8' + 'VIA10' + 'VIA11' + 'VIA12')
-metalName    = pp.Word('M0' + 'M1' + 'M2' + 'M3' + 'M4' + 'M5' + 'M6' + 'M7' + 'M8' + 'M10' + 'M11' + 'M12')
-cutName = pp.Word('VIA0' + 'VIA1' + 'VIA2' + 'VIA3' + 'VIA4' + 'VIA5' + 'VIA6' + 'VIA7' + 'VIA8' + 'VIA10' + 'VIA11' + 'VIA12')
+metalName    = pp.oneOf('M0' + 'M1' + 'M2' + 'M3' + 'M4' + 'M5' + 'M6' + 'M7' + 'M8' + 'M10' + 'M11' + 'M12')
+cutName = pp.oneOf('VIA0' + 'VIA1' + 'VIA2' + 'VIA3' + 'VIA4' + 'VIA5' + 'VIA6' + 'VIA7' + 'VIA8' + 'VIA10' + 'VIA11' + 'VIA12')
 
 
 

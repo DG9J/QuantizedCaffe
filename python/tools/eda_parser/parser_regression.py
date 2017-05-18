@@ -13,10 +13,12 @@ import numpy as np
 import multiprocessing as mp
 import random
 import string
+import shelve
+import json
 
 
 def main():
-    testDef()
+    #testDef()
     #plotList()
     #testFtRpt()
     #MPtestFtRpt()
@@ -25,7 +27,12 @@ def main():
     #rptFile = r'C:/parser_case/df_chan_ccx.ft.2w2s_l.tt0p9v.delay.csv'
     #rptFile = r'C:/parser_case/df_chan_ccx.ft.2w2s_h.tt0p9v.delay.csv'
     #plotFileList()
+    with open('rpt.json', 'r') as fp:
+        output = json.load(fp)
 
+    # print('All subprocesses done.')
+    # print len(pt_path_list)
+    plotList(output)
 
 def testDef():
 
