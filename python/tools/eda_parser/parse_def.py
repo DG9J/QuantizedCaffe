@@ -126,7 +126,6 @@ class parse_def():
                 self.result.append(val)
     ##pin section
     def defPin(self):
-        print "reading PIN SECTION"
         portLayerDefine = pp.Group(icVar.PLUS + "LAYER" + icVar.layerName +
                                   pp.Optional("MASK" + icVar.intNum) +
                                   pp.Optional("SPACING" + icVar.intNum) +
