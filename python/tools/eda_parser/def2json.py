@@ -9,61 +9,67 @@ import matplotlib.pyplot as plt
 import numpy as np
 import json
 
+def list_flatten(l, a=None):
+    #check a
+    if a is None:
+        #initialize with empty list
+        a = []
+    for i in l:
+        if isinstance(i, list):
+            list_flatten(i, a)
+        else:
+            a.append(i)
+    return a
+def get_values(lVals):
+    for val in lVals:
+        if isinstance(val, list):
+            get_values(val)
+        else:
+            return val
 
-def long_time_task(name,pattern,target_string):
-    #print('Run task %s (%s)...' % (name, os.getpid()))
-    #start = time.time()
-    input_delay_result = pattern.searchString(target_string)
-    #end = time.time()
-    #print('Task %s runs %0.2f seconds.' % (name, (end - start)))
-    #print name, input_delay_result
-    return input_delay_result[0][0][1]
-
+def pattern_match(pattern,target_string):
+    #print "pattern:", pattern,target_string
+    result = pattern.searchString(target_string).asList()
+    #print "result:", result
+    new_result = list_flatten(result)
+    new1_result = filter(lambda x: type(x) == str, new_result)
+    #for l in new_result:
+    #    print l, type(l)
+    #print new1_result
+    return new1_result
 
 if __name__=='__main__':
-    rpt_file = r'C:/parser_case/df_cs_umc_t_8.ft.nlc.tt0p65v.rpt'
-    delay = icVar.floatNum
-    arrive = icVar.floatNum
+    defFile = 'C:/parser_case/Place.def'
+    defFile = fi.FileInput(defFile, openhook=fi.hook_compressed)
+    p = Pool(4)
+    for line0 in defFile:
+        if line0.find('PINS') == 0:
+            allPin = []
+            singlePin = []
+            for line1 in defFile:
+                if line1.find('END PINS') == 0:
+                    print "start to match pins", len(allPin)
+                    results = [p.apply_async(pattern_match, args=(icVar.pinDefine, pin)) for pin in allPin]
+                    output = [pt.get() for pt in results]
+                    #print output
+                    p.close()
+                    p.join()
 
-    input_delay = pp.Group("input external delay" + delay + arrive + icVar.toggleType)
-    data_arr_pat = pp.Group("data arrival time" + arrive)
-    pt_path = ''
-    pt_path_list = []
+                    with open('rpt.json', 'w') as fp:
+                        json.dump(output, fp)
+                    fp.close()
+                    break
+                else:
+                    if line1.find(';') > -1:
+                        singlePin.append(line1)
+                        singlePinString = ''.join(singlePin)
+                        allPin.append(singlePinString)
+                        singlePin = []
+                    else:
+                        singlePin.append(line1)
 
-    path_end = re.compile(r'slack ')
-    for line in fi.input(rpt_file,openhook=fi.hook_compressed):
-        match = path_end.search(line)
-        if match:
-            # print "match :" ,line
-            pt_path_list.append(pt_path)
-            pt_path = ""
-        else:
-            pt_path = pt_path + line
-    print "complete read the", rpt_file
+    with open('rpt.json', 'r') as fp:
+        output = json.load(fp)
 
-    MP = 1
 
-    if MP == 0 :
-        i = 0
-        while i < len(pt_path_list):
-            pt_path = pt_path_list[i]
-            input_delay_result = input_delay.searchString(pt_path)
-            i = i + 1
-        print "Serial run finshed"
-    else:
 
-        print('Parent process %s.' % os.getpid())
-        p = Pool(4)
-
-        results = [p.apply_async(long_time_task, args=(k,data_arr_pat,pt_path_list[k])) for k in range(1,1000)]
-        #print('Waiting for all subprocesses done...')
-        output = [pt.get() for pt in results]
-        print output
-        p.close()
-        p.join()
-        with open('rpt.json','w') as fp:
-            json.dump(output,fp)
-        fp.close()
-
-        with open('rpt.json','r') as fp:
-            output = json.load(fp)

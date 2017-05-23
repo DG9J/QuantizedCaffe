@@ -48,7 +48,7 @@ def testPtRpt():
     rpt_file = "fullchip.df_tcdx_t14.df_cs_umc_t8.sorted.gz"
     rpt_file = "fullchip.umc_umcch_t100.df_cs_umc_t8.sorted.gz"
     print "start time", datetime.datetime.now()
-    pt_rpt = p_pt_rpt.parse_pt_rpt(rpt_file)
+    pt_rpt = rpt.parse_pt_rpt(rpt_file)
     print "end  time", datetime.datetime.now()
 def MPtestFtRpt():
     ##regression pt unconstraint report
