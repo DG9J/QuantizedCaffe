@@ -16,6 +16,8 @@ import csv
 import pyparsing as pp
 import icComVar as icVar
 import itertools
+import re
+import json
 
 def pattern_match(pattern,target_string):
     #print "pattern:", pattern
@@ -42,7 +44,7 @@ def get_values(lVals):
             return val
 
 
-'''
+
 
 parser = argparse.ArgumentParser()
 # Required arguments: input and output files.
@@ -65,12 +67,23 @@ def flatten(the_list,new_list):
 
 with open(args.proto_file) as f:
     s = f.read()
-'''
-file = "./example/ResNet-50-deploy.prototxt"
-with open(file) as f:
+
+
+protoFile = args.proto_file
+csvFile = args.csv_file
+#protoFile = "./example/ResNet-50-deploy.prototxt"
+#protoFile = "./example/ResNet-101-deploy.prototxt"
+#protoFile = "./example/ResNet-152-deploy.prototxt"
+#csvFile = "./example/ResNet-50-deploy.csv"
+#csvFile = "./example/ResNet-101-deploy.csv"
+#csvFile = "./example/ResNet-152-deploy.csv"
+with open(protoFile) as f:
     s = f.read()
     s = s.replace('"',"")
     s = s.replace(":","")
+
+
+csvFp = open(csvFile,'w')
 
 flatName    = pp.Word(pp.alphanums + "_"+":")
 attrDefine = pp.Group(flatName   + flatName )
@@ -82,50 +95,80 @@ protoDefine = pp.Group(pp.OneOrMore(attrDefine) + pp.OneOrMore(layerDefine))
 #print type(s),s
 result = pattern_match(protoDefine,s)[0][0]
 #print type(result), len(result),result
-j = 0
+layerCount = 0
+k = 0
 for i in range(0,len(result)):
     if result[i][0] == "layer":
-        result[i][0] = j
-        j += 1
+        result[i][0] = layerCount
+        layerCount += 1
     else:
-        result[i][0] = result[i][0].replace(":", "").replace('"','')
         if result[i][0] == "input_dim":
-            result[i][0] += str(j)
-            j += 1
+            result[i][0] += str(k)
+            k += 1
 
 #print len(result),result
 protoDict= dict(result)
-j = 0
+allKeys = []
+
+protoDictFlat = {}
+
 for key, value in protoDict.iteritems():
     if isinstance(key,str):
-        print "attr",key, value
+        #print "attr",key, value
+        allKeys.append(key)
+        protoDictFlat[key] = value
     elif isinstance(key,int):
+        protoDictFlat[key] = {}
+        protoDictFlat[key]["layer"] = str(key)
         if isinstance(value,list):
             protoDict[key] = dict(value)
-            j += 1
             for l_key , l_value in protoDict[key].iteritems():
-                l_key = l_key.replace(":", "")
                 if isinstance(l_value,list):
                     #print dict(l_value)
                     protoDict[key][l_key] = dict(itertools.izip_longest(*[iter(l_value)] * 2, fillvalue=""))
+                    for p_key, p_value in protoDict[key][l_key].iteritems():
+                        newKey =l_key+'.'+p_key
+                        allKeys.append(newKey)
+                        protoDictFlat[key][newKey] = p_value
                     #print key,l_key,protoDict[key][l_key]
                 elif isinstance(l_value,str):
                     #print "str:",key, l_key, l_value
-                    protoDict[key][l_key]= l_value.replace("\"", "")
+                    newKey = l_key
+                    allKeys.append(l_key)
+                    protoDictFlat[key][newKey] = l_value
                 else:
                     print "Error:", l_value
-                print key,l_key,protoDict[key][l_key]
-            #for l_attr in value:
-            #    print type(l_attr),len(l_attr), l_attr, dict(l_attr)
-            #protoDict[key] = dict(value)
-            #for layer_key, layer_value in protoDict[key].iteritems():
-            #    print "layer dict", layer_key,layer_value
+                #print key,l_key,protoDict[key][l_key]
     else:
         print "Error:"
 
+with open('proto.json', 'w') as fp:
+    json.dump(protoDictFlat, fp)
+fp.close()
+print "allKey",len(allKeys) , allKeys
+uniqKey = list(set(allKeys))
+print "unqiKey",len(uniqKey) , uniqKey
+uniqKey = [k for k in uniqKey if 'layer' not in k]
+uniqKey = [k for k in uniqKey if 'input_dim' not in k]
+uniqKey = [k for k in uniqKey if 'bottom' not in k]
+uniqKey = [k for k in uniqKey if 'name' not in k]
+uniqKey = [k for k in uniqKey if 'type' not in k]
+uniqKey = [k for k in uniqKey if 'top' not in k]
+sortKey= "bottom,layer,name,type,top,"+','.join(uniqKey)
+sortKey = sortKey.split(",")
+print "sortKey",len(sortKey) , sortKey
+columnList = ','.join(sortKey)
 
+csvFp.write(columnList + "\n")
+for i in range(0,layerCount):
+    attrList = []
+    for key in sortKey:
+        if key in protoDictFlat[i]:
+            attrList.append(protoDictFlat[i][key])
+        else:
+            #print "key miss", key, protoDictFlat[i]
+            attrList.append("NA")
+    layerLine = ','.join(attrList)
+    csvFp.write(layerLine + "\n")
 
-
-#with open(args.csv_file, "wb") as csvfile:
-#    writer = csv.writer(csvfile)
-#    writer.writerows(layer_array)
+csvFp.close()
